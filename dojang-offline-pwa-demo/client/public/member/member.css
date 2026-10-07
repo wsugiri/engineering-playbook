@@ -1,0 +1,38 @@
+body {
+  background: #022c22;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #064e3b;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #047857;
+}
+
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.profile-card {
+  background: #064e3b;
+  border: 1px solid #047857;
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.member-badge {
+  background: #10b981;
+  color: #022c22;
+  font-weight: bold;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+}

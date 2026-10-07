@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dojang Core - Sistem Manajemen Bela Diri & Turnamen</title>
+  <link rel="stylesheet" href="/core.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span class="logo-badge">DOJANG</span>
+      <span>Core Portal</span>
+    </div>
+    <nav>
+      <a href="/" class="active">Core Home</a>
+      <a href="/turn-pro/">Turn Pro (Arena)</a>
+      <a href="/coach/">Coach</a>
+      <a href="/member/">Member</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Satu Domain, Multi-Subpath Architecture</h1>
+      <p>
+        Sistem manajemen terintegrasi dengan pemisahan subpath untuk Core Portal, Arena Pertandingan Offline-Ready (Turn Pro), Portal Pelatih, dan Portal Atlet.
+      </p>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="sw-status">Memeriksa Service Worker...</span>
+      </div>
+    </section>
+
+    <!-- Shared Login Section -->
+    <section class="login-section">
+      <div id="logged-out-state">
+        <h3>Login Pengguna Dojang</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+          Login sekali di Core. Sesi autentikasi & token otomatis dibagi ke semua subpath (Turn Pro, Coach, Member).
+        </p>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="email-input">Email Akun</label>
+            <input type="email" id="email-input" value="referee@dojang.id" required>
+          </div>
+          <div class="form-group">
+            <label for="role-select">Peran / Role</label>
+            <select id="role-select">
+              <option value="referee">Wasit / Operator Gelanggang (Turn Pro)</option>
+              <option value="coach">Pelatih (Coach)</option>
+              <option value="member">Atlet (Member)</option>
+              <option value="admin">Administrator Dojang</option>
+            </select>
+          </div>
+          <button type="submit" class="btn" style="width: 100%;">Masuk / Simpan Sesi</button>
+        </form>
+      </div>
+
+      <div id="logged-in-state" style="display: none;">
+        <h3>Sesi Aktif Terverifikasi</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+          Halo, <strong id="user-greeting" style="color: var(--text-main);"></strong>
+        </p>
+        <p style="color: #4ade80; font-size: 0.85rem; margin: 0.75rem 0;">
+          ✓ Token tersimpan di LocalStorage domain ini dan siap digunakan di Turn Pro / Coach / Member.
+        </p>
+        <button id="btn-logout" class="btn" style="background: #475569; width: 100%;">Keluar (Logout)</button>
+      </div>
+    </section>
+
+    <!-- Grid Subpaths Navigation -->
+    <section class="grid-subpaths">
+      <div class="card">
+        <div>
+          <span class="card-tag tag-red">Subpath: /turn-pro/</span>
+          <h3>Dojang Turn Pro (Pertandingan)</h3>
+          <p>
+            Scoreboard digital & manajemen gelanggang. Dilengkapi <strong>Offline Capability</strong>, Pre-caching aset audio/UI, Local-First IndexedDB, dan Outbox Queue Background Sync.
+          </p>
+        </div>
+        <a href="/turn-pro/" class="btn btn-turnpro">Buka Arena Turn Pro &rarr;</a>
+      </div>
+
+      <div class="card">
+        <div>
+          <span class="card-tag tag-blue">Subpath: /coach/</span>
+          <h3>Dojang Coach</h3>
+          <p>
+            Portal pelatih dojang untuk monitoring absensi murid, statistik atlet, jadwal pertandingan sabuk, dan kurikulum jurus.
+          </p>
+        </div>
+        <a href="/coach/" class="btn">Buka Portal Coach &rarr;</a>
+      </div>
+
+      <div class="card">
+        <div>
+          <span class="card-tag tag-gold">Subpath: /member/</span>
+          <h3>Dojang Member</h3>
+          <p>
+            Aplikasi untuk atlet dan murid dojang: cek sertifikat kenaikan tingkat, jadwal latihan, dan kartu anggota digital.
+          </p>
+        </div>
+        <a href="/member/" class="btn">Buka Portal Member &rarr;</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="/core.js"></script>
+</body>
+</html>

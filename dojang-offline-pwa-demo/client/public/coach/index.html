@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dojang Coach - Portal Pelatih</title>
+  <link rel="stylesheet" href="/coach/coach.css">
+</head>
+<body>
+  <header>
+    <div>
+      <strong style="color: #60a5fa; font-size: 1.1rem;">🥋 DOJANG COACH</strong>
+      <span style="color: #94a3b8; font-size: 0.85rem; margin-left: 0.5rem;">(Subpath: /coach/)</span>
+    </div>
+    <div>
+      <span id="coach-user" style="margin-right: 1rem; font-size: 0.9rem; color: #cbd5e1;"></span>
+      <a href="/" style="color: #60a5fa; text-decoration: none;">&larr; Core Home</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h2>Daftar Atlet Binaan Gelanggang</h2>
+      <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 0.25rem;">
+        Monitoring kesiapan atlet binaan yang turun di Dojang Championship.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nama Atlet</th>
+            <th>Kategori Tanding</th>
+            <th>Tingkatan Sabuk</th>
+            <th>Status Partai</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ahmad Rayhan</td>
+            <td>Kyorugi Senior -68kg</td>
+            <td><span class="badge badge-blue">Sabuk Hitam Dan 1</span></td>
+            <td><span class="badge badge-gold">Sedang Bertanding (Partai 101)</span></td>
+          </tr>
+          <tr>
+            <td>Kevin Pratama</td>
+            <td>Kyorugi Senior -58kg</td>
+            <td><span class="badge badge-blue">Sabuk Merah Strip 1</span></td>
+            <td>Menunggu Giliran (Partai 102)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Informasi Sesi Terintegrasi</h3>
+      <p style="color: #94a3b8; font-size: 0.9rem;">
+        Subpath ini membaca token autentikasi yang sama dari LocalStorage Dojang Core tanpa harus melakukan login ulang.
+      </p>
+    </div>
+  </main>
+
+  <script>
+    const userStr = localStorage.getItem('dojang_auth_user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      document.getElementById('coach-user').textContent = `Login: ${user.name}`;
+    }
+  </script>
+</body>
+</html>

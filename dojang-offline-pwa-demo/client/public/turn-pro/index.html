@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dojang Turn Pro - Arena Pertandingan & Scoreboard</title>
+  <link rel="stylesheet" href="/turn-pro/turn-pro.css">
+  <link rel="manifest" href="/turn-pro/manifest.json">
+  <meta name="theme-color" content="#dc2626">
+</head>
+<body>
+
+  <!-- Arena Top Bar -->
+  <header class="arena-header">
+    <div class="match-info">
+      <span class="court-badge">GELANGGANG 1</span>
+      <span class="category-name">Semifinal: Senior Putra Kyorugi -68kg</span>
+      <span style="font-size: 0.85rem; color: #9ca3af;">(Partai #101)</span>
+    </div>
+
+    <div class="network-controls">
+      <div id="offline-status" class="offline-pill">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: currentColor;"></span>
+        <span id="offline-text">TERHUBUNG (ONLINE)</span>
+      </div>
+      <div id="pending-count" class="sync-badge">0 Event Antrean Offline</div>
+      <a href="/" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem;">&larr; Kembali ke Core</a>
+    </div>
+  </header>
+
+  <!-- Action Strip -->
+  <div class="action-strip">
+    <button id="btn-download-data" class="btn-ctrl btn-primary">
+      📥 Unduh Data Gelanggang (Pre-Cache ke IndexedDB)
+    </button>
+    <button id="btn-simulate-offline" class="btn-ctrl" style="background: #991b1b; border-color: #ef4444;">
+      🔌 Simulasikan Putus Sinyal (Offline)
+    </button>
+    <button id="btn-manual-sync" class="btn-ctrl">
+      🔄 Sync Outbox Sekarang
+    </button>
+    <button id="btn-sound-buzzer" class="btn-ctrl">
+      📢 Tes Suara Buzzer / Gong
+    </button>
+  </div>
+
+  <!-- Main Scoreboard -->
+  <main class="scoreboard-container">
+    
+    <!-- SUDUT BIRU (CHONG) -->
+    <section class="fighter-corner corner-blue">
+      <div class="fighter-header">
+        <div>
+          <div class="corner-title">CHONG (BIRU)</div>
+          <div class="fighter-name">Ahmad Rayhan</div>
+          <div class="fighter-dojang">Garuda Taekwondo Club</div>
+        </div>
+      </div>
+
+      <div class="main-score" id="blue-score">0</div>
+
+      <div class="gamjeom-bar">
+        <span>GAM-JEOM (PELANGGARAN):</span>
+        <span id="blue-gamjeom">0</span>
+      </div>
+
+      <div class="scoring-keypad">
+        <button class="btn-point btn-blue-action" data-action="PUNCH" data-points="1">+1 Pukulan</button>
+        <button class="btn-point btn-blue-action" data-action="BODY_KICK" data-points="2">+2 Tendangan Badan</button>
+        <button class="btn-point btn-blue-action" data-action="HEAD_KICK" data-points="3">+3 Tendangan Kepala</button>
+        <button class="btn-point btn-blue-action" data-action="GAMJEOM" data-points="0" style="background: rgba(239, 68, 68, 0.4);">+1 Gam-jeom</button>
+      </div>
+    </section>
+
+    <!-- PANEL WASIT / TIMER TENGAH -->
+    <section class="center-panel">
+      <div class="round-indicator">
+        <div>RONDE</div>
+        <div class="round-number" id="round-number">1</div>
+      </div>
+
+      <div class="timer-box">
+        <div class="timer-display" id="timer-display">02:00</div>
+        <div class="timer-actions">
+          <button id="btn-timer-toggle" class="btn-ctrl btn-primary" style="justify-content: center;">
+            ▶ Mulai Ronde
+          </button>
+          <button id="btn-timer-reset" class="btn-ctrl" style="justify-content: center;">
+            ↺ Reset Waktu
+          </button>
+          <button id="btn-next-round" class="btn-ctrl" style="justify-content: center; background: #059669; border-color: #10b981;">
+            ⏭ Ronde Berikutnya
+          </button>
+        </div>
+      </div>
+
+      <div style="font-size: 0.75rem; color: #9ca3af;">
+        Scope SW: <code>/turn-pro/</code><br>
+        Local DB: <code>IndexedDB (Outbox)</code>
+      </div>
+    </section>
+
+    <!-- SUDUT MERAH (HONG) -->
+    <section class="fighter-corner corner-red">
+      <div class="fighter-header">
+        <div>
+          <div class="corner-title">HONG (MERAH)</div>
+          <div class="fighter-name">Budi Santoso</div>
+          <div class="fighter-dojang">Rajawali Martial Art</div>
+        </div>
+      </div>
+
+      <div class="main-score" id="red-score">0</div>
+
+      <div class="gamjeom-bar">
+        <span>GAM-JEOM (PELANGGARAN):</span>
+        <span id="red-gamjeom">0</span>
+      </div>
+
+      <div class="scoring-keypad">
+        <button class="btn-point btn-red-action" data-action="PUNCH" data-points="1">+1 Pukulan</button>
+        <button class="btn-point btn-red-action" data-action="BODY_KICK" data-points="2">+2 Tendangan Badan</button>
+        <button class="btn-point btn-red-action" data-action="HEAD_KICK" data-points="3">+3 Tendangan Kepala</button>
+        <button class="btn-point btn-red-action" data-action="GAMJEOM" data-points="0" style="background: rgba(59, 130, 246, 0.4);">+1 Gam-jeom</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Log Drawer (Outbox State Inspector) -->
+  <footer class="log-drawer">
+    <h4>
+      <span>Log Event Scoring Lokal (IndexedDB Outbox Queue)</span>
+      <span style="font-size: 0.75rem; font-weight: normal;">*Setiap aksi skor tersimpan instan di perangkat lokal, disinkronkan saat koneksi online.</span>
+    </h4>
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Event ID</th>
+          <th>Ronde</th>
+          <th>Aksi Skor</th>
+          <th>Waktu Lokal</th>
+          <th>Status Sinkronisasi</th>
+        </tr>
+      </thead>
+      <tbody id="log-table-body">
+        <tr>
+          <td colspan="5" style="text-align: center; color: #6b7280;">Belum ada aksi skor yang tercatat.</td>
+        </tr>
+      </tbody>
+    </table>
+  </footer>
+
+  <script src="/turn-pro/turn-pro.js"></script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+:root {
+  --bg-arena: #0b0f19;
+  --chong-blue: #1d4ed8;
+  --chong-blue-glow: rgba(29, 78, 216, 0.4);
+  --hong-red: #b91c1c;
+  --hong-red-glow: rgba(185, 28, 28, 0.4);
+  --gold-timer: #fbbf24;
+  --panel-bg: #111827;
+  --border-arena: #1f2937;
+  --text-white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  background-color: var(--bg-arena);
+  color: var(--text-white);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header & Arena Bar */
+.arena-header {
+  background: #030712;
+  border-bottom: 2px solid var(--border-arena);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.match-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.court-badge {
+  background: #dc2626;
+  color: white;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.category-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.network-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.offline-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.offline-pill.is-offline {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.sync-badge {
+  background: #374151;
+  color: #e5e7eb;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+/* Control Top Strip */
+.action-strip {
+  background: #111827;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-arena);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-ctrl {
+  background: #374151;
+  color: white;
+  border: 1px solid #4b5563;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.btn-ctrl:hover {
+  background: #4b5563;
+}
+
+.btn-primary {
+  background: #2563eb;
+  border-color: #3b82f6;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+/* Scoreboard Layout */
+.scoreboard-container {
+  display: grid;
+  grid-template-columns: 1fr 220px 1fr;
+  flex: 1;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.fighter-corner {
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.corner-blue {
+  background: linear-gradient(180deg, #1e3a8a 0%, #172554 100%);
+  border: 2px solid #2563eb;
+}
+
+.corner-red {
+  background: linear-gradient(180deg, #7f1d1d 0%, #450a0a 100%);
+  border: 2px solid #dc2626;
+}
+
+.fighter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.corner-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.fighter-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-top: 0.5rem;
+}
+
+.fighter-dojang {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.main-score {
+  font-size: 7rem;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1;
+  margin: 1rem 0;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  font-variant-numeric: tabular-nums;
+}
+
+.gamjeom-bar {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.scoring-keypad {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.btn-point {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.75rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.1s;
+}
+
+.btn-point:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.btn-point:active {
+  transform: scale(0.96);
+}
+
+/* Center Referee Panel */
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--panel-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-arena);
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.round-indicator {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #9ca3af;
+}
+
+.round-number {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: white;
+}
+
+.timer-box {
+  background: #030712;
+  border: 2px solid #374151;
+  border-radius: 12px;
+  padding: 1rem 0.5rem;
+}
+
+.timer-display {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: var(--gold-timer);
+  font-family: "Courier New", Courier, monospace;
+}
+
+.timer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* Logs and Local Storage Drawer */
+.log-drawer {
+  background: #030712;
+  border-top: 1px solid var(--border-arena);
+  padding: 1rem 1.5rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.log-drawer h4 {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.log-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.log-table th, .log-table td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid #1f2937;
+}
+
+.log-table th {
+  color: #6b7280;
+}
+
+.tag-synced {
+  color: #4ade80;
+}
+
+.tag-pending {
+  color: #f87171;
+  font-weight: bold;
+}

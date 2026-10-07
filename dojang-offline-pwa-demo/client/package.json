@@ -1,0 +1,8 @@
+{
+  "name": "dojang-client",
+  "version": "1.0.0",
+  "description": "Frontend Dojang Multi-Subpath PWA (Core, Turn Pro, Coach, Member)",
+  "scripts": {
+    "start": "node ../server/src/server.js"
+  }
+}
