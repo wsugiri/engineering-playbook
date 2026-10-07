@@ -97,27 +97,72 @@ dojang-offline-pwa-demo/
 
 ## 3. Strategi Service Worker pada 1 Domain (Subpath Scope)
 
-Browser mengizinkan **lebih dari satu Service Worker dalam 1 origin domain**, asalkan memiliki `scope` yang berbeda.
+Browser mengizinkan **lebih dari satu Service Worker dalam 1 origin domain**, asalkan memiliki `scope` yang berbeda sesuai spesifikasi resmi W3C Service Worker API.
 
-### Aturan Hirarki Scope Browser:
+### Aturan Hirarki Scope Browser (Longest Prefix Match):
 1. Ketika user berada di `dojang.com/`: browser dikendalikan oleh `/sw.js` (Scope: `/`).
-2. Ketika user masuk ke `dojang.com/turn-pro/`: browser secara otomatis dikendalikan oleh `/turn-pro/sw.js` (Scope: `/turn-pro/`) karena kecocokan path yang lebih spesifik.
+2. Ketika user masuk ke `dojang.com/turn-pro/`: browser secara otomatis dikendalikan oleh `/turn-pro/sw.js` (Scope: `/turn-pro/`) karena kecocokan path yang lebih spesifik (*longest prefix match*).
 
-### Registrasi di Masing-masing Aplikasi:
+---
 
-#### A. Di Dojang Core (`/core.js`):
+### Opsi Implementasi: Dual SW vs Single SW (Hanya di Turn Pro)
+
+#### Opsi 1: Hanya Mengaktifkan SW di Turn Pro (Direkomendasikan jika Core belum butuh PWA)
+Jika Dojang Core (landing page & login portal) belum membutuhkan fitur offline, **Core TIDAK WAJIB memiliki Service Worker**:
+* **Dojang Core:** Cukup berjalan sebagai web standar tanpa registrasi SW.
+* **Dojang Turn Pro:** Tetap mendaftarkan SW mandiri di `/turn-pro/turn-pro.js` (`scope: '/turn-pro/'`).
+* **Apakah Turn Pro tetap bisa offline?** **YA, 100% bisa.** Service Worker Turn Pro, cache aset arena, dan IndexedDB bersifat mandiri di subpath `/turn-pro/`. Browser tidak memerlukan Service Worker di root domain agar subpath dapat bekerja offline.
+* **Bagaimana dengan sesi login?** Sesi login dari Core (`localStorage.getItem('dojang_auth_user')` atau Cookie) tetap dapat dibaca oleh Turn Pro karena berada dalam satu origin (`dojang.com`).
+
+#### Opsi 2: Registrasi Dual Service Worker (Core + Turn Pro)
+Bila Core nantinya juga membutuhkan kapabilitas PWA (misal offline caching untuk modul portal):
+
+##### A. Di Dojang Core (`/core.js`):
 ```javascript
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js', { scope: '/' });
 }
 ```
 
-#### B. Di Dojang Turn Pro (`/turn-pro/turn-pro.js`):
+##### B. Di Dojang Turn Pro (`/turn-pro/turn-pro.js`):
 ```javascript
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/turn-pro/sw.js', { scope: '/turn-pro/' });
 }
 ```
+
+---
+
+### Analisis Keamanan, Pros & Cons (Dual SW di 1 Domain)
+
+Apakah aman mendaftarkan 2 Service Worker di 1 domain yang sama? **Aman**, namun ada beberapa pertimbangan:
+
+| Aspek | Kelebihan (Pros) | Kekurangan & Risiko (Cons) |
+| :--- | :--- | :--- |
+| **Isolasi Modul (*Fault Isolation*)** | Bug / crash pada SW Turn Pro tidak merusak landing page atau alur login Core, dan sebaliknya. | Jika ada script bersama (*shared layout/header*) yang tidak sengaja me-load script Core di halaman Turn Pro, bisa terjadi registrasi ganda. |
+| **Siklus Rilis (*Lifecycle Deploy*)** | Mandiri (*decoupled*). Update versi cache Turn Pro tidak memaksa user publik di landing page mengunduh ulang aset. | Butuh konfigurasi deploy CI/CD terpisah per bucket S3. |
+| **Strategi Caching Berbeda** | Core bisa menggunakan `NetworkFirst` untuk konten dinamis, sedangkan Turn Pro menggunakan `CacheFirst` agresif untuk keandalan di gelanggang GOR. | **Cache Storage & IndexedDB bersifat 1 Origin:** Kedua SW berbagi namespace cache yang sama jika tidak dipisah secara eksplisit. |
+| **Ukuran & Performa** | Pengunjung umum tidak perlu mengunduh aset scoreboard/audio Turn Pro yang besar. | Request lintas scope dari Turn Pro (misal panggil `/api/*` atau aset bersama) tetap ditangkap oleh SW Turn Pro. |
+
+---
+
+### ⚠️ Best Practices Wajib untuk Multi-SW:
+
+1. **Namespace Cache Storage Wajib Dipisah:**
+   Hindari pembersihan cache membabi buta saat event `activate`. Berikan prefix unik per aplikasi:
+   ```javascript
+   // Di /turn-pro/sw.js
+   const EXPECTED_CACHES = ['turnpro-v1'];
+   caches.keys().then(keys => Promise.all(
+     keys
+       .filter(k => k.startsWith('turnpro-') && !EXPECTED_CACHES.includes(k))
+       .map(k => caches.delete(k))
+   ));
+   ```
+2. **Selalu Gunakan Trailing Slash:**
+   Gunakan `{ scope: '/turn-pro/' }` (jangan `/turn-pro` tanpa slash agar tidak mencocokkan path lain seperti `/turn-promosi`).
+3. **PWA Manifest Independen:**
+   Di file `/turn-pro/manifest.json`, pastikan `start_url` dan `scope` diarahkan ke `/turn-pro/` agar aplikasi Turn Pro bisa diinstal sebagai PWA mandiri di tablet/laptop wasit.
 
 ---
 
