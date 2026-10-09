@@ -40,9 +40,35 @@
       🔄 Sync Outbox Sekarang
     </button>
     <button id="btn-sound-buzzer" class="btn-ctrl">
-      📢 Tes Suara Buzzer / Gong
+      📢 Tes Suara Buzzer
+    </button>
+    <button id="btn-open-display" class="btn-ctrl" style="background: #0d9488; border-color: #14b8a6;">
+      📺 Buka Display Monitor Gelanggang (Layar TV / Proyektor)
+    </button>
+    <button id="btn-toggle-split" class="btn-ctrl" style="background: #4338ca; border-color: #6366f1;">
+      🪟 Simulasi Split-Screen (Operator + Display)
+    </button>
+    <button id="btn-burst-stream" class="btn-ctrl" style="background: #d97706; border-color: #f59e0b;">
+      ⚡ Burst Test (5 Stream Data Sekaligus)
     </button>
   </div>
+
+  <!-- Split-Screen Simulator Panel (Layar Display TV Gelanggang) -->
+  <section id="split-simulator-panel" class="split-simulator-panel hidden">
+    <div class="split-simulator-header">
+      <div class="split-simulator-title">
+        <span>📺 SIMULASI LAYAR DISPLAY GELANGGANG (PREVIEW MONITOR PENONTON & JURI)</span>
+        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: normal;">*Terkoneksi via BroadcastChannel P2P lokal secara realtime (0ms latency, 100% offline).</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="btn-refresh-split" class="btn-ctrl" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">🔄 Muat Ulang Preview</button>
+        <button id="btn-close-split" class="btn-ctrl" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #ef4444;">✕ Tutup</button>
+      </div>
+    </div>
+    <div class="split-iframe-container">
+      <iframe id="split-iframe" src="/turn-pro/display.html" title="Display Monitor Arena"></iframe>
+    </div>
+  </section>
 
   <!-- Main Scoreboard -->
   <main class="scoreboard-container">
@@ -91,6 +117,9 @@
           <button id="btn-next-round" class="btn-ctrl" style="justify-content: center; background: #059669; border-color: #10b981;">
             ⏭ Ronde Berikutnya
           </button>
+          <button id="btn-declare-winner" class="btn-ctrl" style="justify-content: center; background: #b45309; border-color: #f59e0b;">
+            🏆 Deklarasi Pemenang
+          </button>
         </div>
       </div>
 
@@ -126,6 +155,41 @@
     </section>
 
   </main>
+
+  <!-- Live Stream Telemetry & Event Inspector -->
+  <section class="stream-console-section">
+    <div class="stream-console-header">
+      <div class="stream-title-group">
+        <h3>📡 Telemetri Stream Data (Online & Offline Simulator)</h3>
+        <div class="stream-badges">
+          <span class="badge-stream active" id="stream-active-badge">● STREAM AKTIF</span>
+          <span class="badge-stream buffer" id="stream-buffer-badge">0 IN BUFFER</span>
+        </div>
+      </div>
+
+      <div class="stream-toolbar">
+        <div class="stream-filter-tabs">
+          <button class="stream-tab active" data-filter="ALL">Semua Stream</button>
+          <button class="stream-tab" data-filter="P2P">📡 Local Display (P2P)</button>
+          <button class="stream-tab" data-filter="OUTBOX">📦 Offline Queue (IDB)</button>
+          <button class="stream-tab" data-filter="CLOUD">☁️ Cloud Sync (API)</button>
+        </div>
+        <button id="btn-stream-random" class="btn-ctrl" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">⚡ 1 Poin Acak</button>
+        <button id="btn-clear-stream" class="btn-ctrl" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">🧹 Bersihkan</button>
+        <button id="btn-autoscroll-stream" class="btn-ctrl" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #047857;">Auto-Scroll: ON</button>
+      </div>
+    </div>
+
+    <div class="stream-terminal" id="stream-terminal">
+      <div class="stream-row">
+        <span class="stream-time">[00:00:00]</span>
+        <span class="stream-tag tag-p2p">INIT_STREAM</span>
+        <div class="stream-body">
+          Engine Stream Inisialisasi: Menghubungkan BroadcastChannel 'dojang_arena_channel' & IndexedDB.
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Log Drawer (Outbox State Inspector) -->
   <footer class="log-drawer">

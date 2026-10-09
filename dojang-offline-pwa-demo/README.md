@@ -61,9 +61,12 @@ dojang-offline-pwa-demo/
 │       ├── core.js                        # Login logic & registrasi Core SW
 │       ├── turn-pro/                      # 🥋 Dojang Turn Pro (Arena Pertandingan)
 │       │   ├── sw.js                      # ⚠️ Dedicated SW Turn Pro (Scope: '/turn-pro/')
-│       │   ├── index.html                 # Scoreboard digital (Chong vs Hong)
+│       │   ├── index.html                 # Scoreboard digital (Chong vs Hong) & Operator Console
 │       │   ├── turn-pro.css               # Tampilan LED scoreboard arena
-│       │   ├── turn-pro.js                # IndexedDB engine, sound synth, outbox sync
+│       │   ├── turn-pro.js                # IndexedDB engine, sound synth, outbox sync, P2P channel
+│       │   ├── display.html               # 📺 Layar Display Gelanggang (TV / Videotron Arena)
+│       │   ├── display.css                # Styling stadium LED arena display
+│       │   ├── display.js                 # Engine display penerima stream BroadcastChannel
 │       │   └── manifest.json              # PWA manifest Turn Pro
 │       ├── coach/                         # 🥋 Dojang Coach
 │       │   ├── index.html                 # Dashboard pelatih binaan
@@ -203,6 +206,15 @@ Setiap kali tombol poin atau gam-jeom ditekan:
 * Dikirim dalam 1 panggilan batch ke `POST /api/turn-pro/sync`.
 * Server memproses secara **idempotent** (mencegah duplikasi data poin).
 * Setelah mendapat respon sukses, status event di IndexedDB diubah menjadi `synced: true`.
+
+### 5. Display Monitor Gelanggang & BroadcastChannel API (`dojang_arena_channel`)
+Untuk menampilkan papan skor digital ke TV/Proyektor gelanggang tanpa perlu koneksi internet atau server perantara:
+* **Halaman Display Khusus**: `/turn-pro/display.html` (dapat dibuka di layar sekunder via HDMI / proyektor arena).
+* **Komunikasi Ultra-Low Latency (< 1ms)**: Menggunakan native W3C **`BroadcastChannel` API** pada channel `dojang_arena_channel`.
+  - Browser melakukan *Inter-Process Communication (IPC)* langsung di memori antar tab/jendela dalam 1 origin (`dojang.com`).
+  - **100% Offline Capability**: Tidak membutuhkan kabel LAN router, WiFi gelanggang, WebSocket server, atau cloud bridge!
+  - **Dual-Layer Fallback**: Dilengkapi fallback otomatis ke `window.addEventListener('storage')` melalui `localStorage` jika browser lama tidak mendukung BroadcastChannel.
+  - **Heartbeat & Liveness Watchdog**: Operator mengirim sinyal detak jantung berkala setiap 2.5 detik untuk memastikan link monitor aktif dan mengukur latensi (ping < 1ms).
 
 ---
 

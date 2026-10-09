@@ -6,13 +6,16 @@
  * 3. Background Sync untuk pengiriman antrean Outbox scoring saat online
  */
 
-const CACHE_NAME = 'turn-pro-v1';
+const CACHE_NAME = 'turn-pro-v2';
 
 const TURN_PRO_ASSETS = [
   '/turn-pro/',
   '/turn-pro/index.html',
   '/turn-pro/turn-pro.css',
   '/turn-pro/turn-pro.js',
+  '/turn-pro/display.html',
+  '/turn-pro/display.css',
+  '/turn-pro/display.js',
   '/turn-pro/manifest.json'
 ];
 

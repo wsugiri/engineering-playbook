@@ -42,6 +42,10 @@ app.use((req, res, next) => {
 app.use(express.static(clientPublicDir));
 
 // 4. Subpath SPA Fallbacks
+app.get(["/turn-pro/display", "/turn-pro/display/"], (req, res) => {
+  res.sendFile(path.join(clientPublicDir, "turn-pro", "display.html"));
+});
+
 app.get("/turn-pro/*", (req, res) => {
   res.sendFile(path.join(clientPublicDir, "turn-pro", "index.html"));
 });

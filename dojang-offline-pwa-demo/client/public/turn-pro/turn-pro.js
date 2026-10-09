@@ -180,6 +180,160 @@ function playBuzzerSound(type = 'point') {
 }
 
 // ============================================================================
+// 3.5. BROADCAST CHANNEL & REALTIME TELEMETRY ENGINE
+// ============================================================================
+const CHANNEL_NAME = 'dojang_arena_channel';
+let arenaChannel = null;
+let streamAutoScroll = true;
+let activeStreamFilter = 'ALL';
+const streamLogsMemory = [];
+
+// Inisialisasi BroadcastChannel untuk komunikasi P2P layar monitor
+function initArenaBroadcast() {
+  if ('BroadcastChannel' in window) {
+    arenaChannel = new BroadcastChannel(CHANNEL_NAME);
+    arenaChannel.onmessage = (event) => {
+      const data = event.data;
+      if (data?.type === 'REQUEST_INITIAL_STATE') {
+        logStreamPacket('P2P', 'DISPLAY_HANDSHAKE', 'Monitor Layar meminta State Sinkronisasi Awal', { currentMatch });
+        broadcastCurrentState();
+      } else if (data?.type === 'STATE_SYNC' && data.payload) {
+        // Sync balik jika dipicu langsung dari layar monitor
+        Object.assign(currentMatch, data.payload);
+        timerSeconds = data.payload.timerSeconds ?? timerSeconds;
+        renderScores();
+        updateTimerDisplay();
+        logStreamPacket('P2P', 'DISPLAY_INBOUND_SYNC', 'Menerima pembaruan state balik dari Monitor Display', data.payload);
+      } else if (data?.type === 'TIMER_TOGGLE') {
+        isTimerRunning = data.isTimerRunning;
+        timerSeconds = data.timerSeconds;
+        updateTimerDisplay();
+        elBtnTimerToggle.textContent = isTimerRunning ? '⏸ Jeda Ronde' : '▶ Mulai Ronde';
+        if (isTimerRunning) elBtnTimerToggle.classList.add('btn-pause');
+        else elBtnTimerToggle.classList.remove('btn-pause');
+      }
+    };
+
+    // Heartbeat transmitter: Memberikan kepastian konektivitas ke layar monitor setiap 2.5 detik
+    setInterval(() => {
+      if (arenaChannel) {
+        arenaChannel.postMessage({
+          type: 'HEARTBEAT',
+          timestamp: Date.now(),
+          matchId: currentMatch.matchId
+        });
+      }
+    }, 2500);
+  }
+}
+
+function broadcastToDisplay(type, data = {}) {
+  const payload = {
+    type,
+    ...data,
+    timestamp: Date.now()
+  };
+
+  // 1. BroadcastChannel API
+  if (arenaChannel) {
+    try {
+      arenaChannel.postMessage(payload);
+    } catch (e) {
+      console.warn('BroadcastChannel error:', e);
+    }
+  }
+
+  // 2. LocalStorage Fallback antar tab/window
+  try {
+    localStorage.setItem('dojang_arena_broadcast_event', JSON.stringify(payload));
+    localStorage.setItem('dojang_arena_current_state', JSON.stringify({
+      ...currentMatch,
+      timerSeconds,
+      isTimerRunning,
+      isOnline: isSystemOnline()
+    }));
+  } catch (e) {}
+}
+
+function broadcastCurrentState() {
+  broadcastToDisplay('STATE_SYNC', {
+    payload: {
+      ...currentMatch,
+      timerSeconds,
+      isTimerRunning,
+      isOnline: isSystemOnline()
+    }
+  });
+}
+
+// Log Terminal Stream Visualizer
+function logStreamPacket(category, tag, bodyText, payload = null) {
+  const now = new Date();
+  const timeStr = `[${now.toTimeString().split(' ')[0]}.${now.getMilliseconds().toString().padStart(3, '0')}]`;
+
+  const logItem = {
+    id: 'stream-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+    timeStr,
+    category, // 'P2P', 'OUTBOX', 'CLOUD', 'NETWORK'
+    tag,
+    bodyText,
+    payload: payload ? JSON.stringify(payload) : null
+  };
+
+  streamLogsMemory.push(logItem);
+  if (streamLogsMemory.length > 200) {
+    streamLogsMemory.shift();
+  }
+
+  appendStreamRowToDOM(logItem);
+}
+
+function appendStreamRowToDOM(item) {
+  const terminal = document.getElementById('stream-terminal');
+  if (!terminal) return;
+
+  // Filter check
+  if (activeStreamFilter !== 'ALL' && item.category !== activeStreamFilter) {
+    return;
+  }
+
+  let tagClass = 'tag-p2p';
+  if (item.category === 'OUTBOX') tagClass = 'tag-outbox';
+  else if (item.tag.includes('POST') || item.category === 'CLOUD') tagClass = 'tag-cloud-post';
+  if (item.tag.includes('ACK')) tagClass = 'tag-cloud-ack';
+  if (item.category === 'NETWORK') tagClass = 'tag-network';
+
+  const row = document.createElement('div');
+  row.className = 'stream-row';
+  row.dataset.category = item.category;
+  row.innerHTML = `
+    <span class="stream-time">${item.timeStr}</span>
+    <span class="stream-tag ${tagClass}">${item.tag}</span>
+    <div class="stream-body">
+      ${item.bodyText}
+      ${item.payload ? `<div class="stream-payload">${item.payload.length > 120 ? item.payload.substring(0, 120) + '...' : item.payload}</div>` : ''}
+    </div>
+  `;
+
+  terminal.appendChild(row);
+
+  if (streamAutoScroll) {
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+}
+
+function renderAllStreamRows() {
+  const terminal = document.getElementById('stream-terminal');
+  if (!terminal) return;
+  terminal.innerHTML = '';
+  streamLogsMemory.forEach((item) => {
+    if (activeStreamFilter === 'ALL' || item.category === activeStreamFilter) {
+      appendStreamRowToDOM(item);
+    }
+  });
+}
+
+// ============================================================================
 // 4. SCOREBOARD STATE & LOGIC
 // ============================================================================
 let currentMatch = {
@@ -210,6 +364,7 @@ const elOfflineStatus = document.getElementById('offline-status');
 const elOfflineText = document.getElementById('offline-text');
 const elBtnSimulateOffline = document.getElementById('btn-simulate-offline');
 const elLogTableBody = document.getElementById('log-table-body');
+const elStreamBufferBadge = document.getElementById('stream-buffer-badge');
 
 function renderScores() {
   if (elBlueScore) elBlueScore.textContent = currentMatch.bluePoints;
@@ -235,6 +390,12 @@ function updateTimerDisplay() {
 async function recordScoreAction(targetCorner, actionType, pointsDelta) {
   playBuzzerSound('point');
 
+  let actionLabel = actionType;
+  if (actionType === 'PUNCH') actionLabel = '+1 Pukulan';
+  else if (actionType === 'BODY_KICK') actionLabel = '+2 Tendangan Badan';
+  else if (actionType === 'HEAD_KICK') actionLabel = '+3 Tendangan Kepala';
+  else if (actionType === 'GAMJEOM') actionLabel = '+1 Gam-jeom (Pelanggaran)';
+
   // Update State Lokal UI langsung
   if (targetCorner === 'BLUE') {
     if (actionType === 'GAMJEOM') {
@@ -253,7 +414,24 @@ async function recordScoreAction(targetCorner, actionType, pointsDelta) {
   }
   renderScores();
 
-  // Buat Event Log Imutable
+  // 1. Broadcast ke Layar Display Monitor secara P2P lokal (< 1ms, offline/online)
+  broadcastToDisplay('SCORE_HIT', {
+    targetCorner,
+    actionType,
+    actionLabel,
+    pointsDelta,
+    state: { ...currentMatch }
+  });
+
+  logStreamPacket('P2P', 'STREAM_BROADCAST', `Paket skor ${targetCorner} dikirim ke Monitor Display via BroadcastChannel (< 1ms)`, {
+    targetCorner,
+    actionType,
+    pointsDelta,
+    matchId: currentMatch.matchId,
+    scoreboard: `${currentMatch.bluePoints} - ${currentMatch.redPoints}`
+  });
+
+  // 2. Buat Event Log Imutable untuk Outbox Queue
   const eventPayload = {
     id: 'evt-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
     matchId: currentMatch.matchId,
@@ -267,6 +445,11 @@ async function recordScoreAction(targetCorner, actionType, pointsDelta) {
 
   // Simpan ke IndexedDB Outbox
   await addOutboxEvent(eventPayload);
+
+  if (!isSystemOnline()) {
+    logStreamPacket('OUTBOX', 'IDB_QUEUE_BUFFER', `OFFLINE: Event ${eventPayload.id} disimpan ke antrean IndexedDB Outbox`, eventPayload);
+  }
+
   await refreshLogsAndPendingCount();
 
   // Jika kondisi online, coba sync otomatis
@@ -284,20 +467,27 @@ function toggleTimer() {
     isTimerRunning = false;
     elBtnTimerToggle.textContent = '▶ Mulai Ronde';
     elBtnTimerToggle.classList.remove('btn-pause');
+    broadcastToDisplay('TIMER_TOGGLE', { isTimerRunning: false, timerSeconds });
+    logStreamPacket('P2P', 'TIMER_PAUSE', `Waktu ronde dijeda pada ${formatTimer(timerSeconds)}`, { timerSeconds });
   } else {
     isTimerRunning = true;
     elBtnTimerToggle.textContent = '⏸ Jeda Ronde';
     elBtnTimerToggle.classList.add('btn-pause');
+    broadcastToDisplay('TIMER_TOGGLE', { isTimerRunning: true, timerSeconds });
+    logStreamPacket('P2P', 'TIMER_START', `Waktu ronde dimulai (${formatTimer(timerSeconds)})`, { timerSeconds });
 
     timerInterval = setInterval(() => {
       if (timerSeconds > 0) {
         timerSeconds--;
         updateTimerDisplay();
+        broadcastToDisplay('TIMER_TICK', { timerSeconds, isTimerRunning: true });
       } else {
         clearInterval(timerInterval);
         isTimerRunning = false;
         elBtnTimerToggle.textContent = '▶ Ronde Selesai';
         playBuzzerSound('buzzer');
+        broadcastToDisplay('ROUND_OVER', { round: currentMatch.round });
+        logStreamPacket('P2P', 'ROUND_FINISHED', `Ronde ${currentMatch.round} Selesai! Buzzer aktif`, { round: currentMatch.round });
         alert(`Waktu Ronde ${currentMatch.round} Selesai!`);
       }
     }, 1000);
@@ -310,6 +500,8 @@ function resetTimer() {
   timerSeconds = 120;
   updateTimerDisplay();
   if (elBtnTimerToggle) elBtnTimerToggle.textContent = '▶ Mulai Ronde';
+  broadcastToDisplay('TIMER_TOGGLE', { isTimerRunning: false, timerSeconds });
+  logStreamPacket('P2P', 'TIMER_RESET', 'Timer direset kembali ke 02:00', { timerSeconds });
 }
 
 function nextRound() {
@@ -317,6 +509,8 @@ function nextRound() {
     currentMatch.round++;
     resetTimer();
     renderScores();
+    broadcastToDisplay('STATE_SYNC', { payload: { ...currentMatch, timerSeconds, isTimerRunning } });
+    logStreamPacket('P2P', 'NEXT_ROUND', `Beralih ke Ronde ${currentMatch.round}`, { round: currentMatch.round });
   } else {
     alert('Pertandingan 3 Ronde telah selesai!');
   }
@@ -340,6 +534,9 @@ function updateNetworkUI() {
     elOfflineText.textContent = 'TERPUTUS (MODE OFFLINE)';
     elBtnSimulateOffline.textContent = '🟢 Pulihkan Sinyal (Online)';
   }
+
+  broadcastToDisplay('NETWORK_STATE', { isOnline: online });
+  logStreamPacket('NETWORK', 'NET_SWITCH', `Jaringan arena beralih ke: ${online ? 'ONLINE (Cloud Connected)' : 'OFFLINE (Air-gapped Venue)'}`, { isOnline: online });
 }
 
 async function triggerSync() {
@@ -358,7 +555,7 @@ async function triggerSync() {
 
 async function syncOutboxToServer() {
   if (!isSystemOnline()) {
-    console.log('[Sync Engine] Tidak bisa sync: Mode Offline aktif.');
+    logStreamPacket('OUTBOX', 'SYNC_BLOCKED', 'Tidak dapat mengirim sync: Sistem dalam mode OFFLINE (Air-gapped)');
     return;
   }
 
@@ -367,8 +564,10 @@ async function syncOutboxToServer() {
     return;
   }
 
-  console.log(`[Sync Engine] Mengirim ${pendingEvents.length} event ke server...`);
+  const payloadSize = JSON.stringify({ events: pendingEvents }).length;
+  logStreamPacket('CLOUD', 'SYNC_POST_DISPATCH', `Mengirim batch ${pendingEvents.length} event ke server POST /api/turn-pro/sync (${payloadSize} bytes)...`, { count: pendingEvents.length });
 
+  const startTime = performance.now();
   try {
     const res = await fetch('/api/turn-pro/sync', {
       method: 'POST',
@@ -376,14 +575,19 @@ async function syncOutboxToServer() {
       body: JSON.stringify({ events: pendingEvents })
     });
 
+    const elapsed = Math.round(performance.now() - startTime);
     const result = await res.json();
     if (result.success && result.syncedEventIds) {
       await markEventsAsSynced(result.syncedEventIds);
-      console.log('[Sync Engine] Berhasil menyinkronkan event ke cloud.');
+      logStreamPacket('CLOUD', 'SYNC_SERVER_ACK', `HTTP 200 OK: ${result.syncedEventIds.length} event di-ack server (latency: ${elapsed}ms)`, {
+        syncedCount: result.syncedEventIds.length,
+        totalInServer: result.totalLogsInServer,
+        latencyMs: elapsed
+      });
       await refreshLogsAndPendingCount();
     }
   } catch (err) {
-    console.warn('[Sync Engine] Gagal mengirim sync (jaringan tidak stabil):', err.message);
+    logStreamPacket('CLOUD', 'SYNC_ERROR', `Koneksi gagal saat dispatch sync: ${err.message}`, { error: err.message });
   }
 }
 
@@ -393,6 +597,9 @@ async function refreshLogsAndPendingCount() {
 
   if (elPendingCount) {
     elPendingCount.textContent = `${pending.length} Event Antrean Offline`;
+  }
+  if (elStreamBufferBadge) {
+    elStreamBufferBadge.textContent = `${pending.length} IN BUFFER`;
   }
 
   if (elLogTableBody) {
@@ -423,6 +630,7 @@ async function downloadArenaData() {
     const data = await res.json();
     if (data.success) {
       await saveMatchToLocalDB(data.data.matches[0]);
+      logStreamPacket('CLOUD', 'ARENA_SEEDED', `Berhasil pre-cache data gelanggang: ${data.data.arena}`, data.data.rules);
       alert(`Berhasil download ${data.data.matches.length} jadwal pertandingan ke IndexedDB lokal untuk ${data.data.arena}!`);
     }
   } catch (err) {
@@ -430,10 +638,48 @@ async function downloadArenaData() {
   }
 }
 
+// Simulasi 5 Stream Skor Beruntun (Burst Test)
+async function runBurstStreamSimulation() {
+  const actions = [
+    { corner: 'BLUE', action: 'PUNCH', pts: 1 },
+    { corner: 'BLUE', action: 'BODY_KICK', pts: 2 },
+    { corner: 'RED', action: 'HEAD_KICK', pts: 3 },
+    { corner: 'BLUE', action: 'GAMJEOM', pts: 0 },
+    { corner: 'RED', action: 'BODY_KICK', pts: 2 }
+  ];
+
+  logStreamPacket('P2P', 'BURST_START', 'Memulai Burst Test: 5 aksi skor beruntun dalam 1.2 detik...');
+
+  for (let i = 0; i < actions.length; i++) {
+    const act = actions[i];
+    await recordScoreAction(act.corner, act.action, act.pts);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+
+  logStreamPacket('P2P', 'BURST_FINISH', 'Burst Test selesai dieksekusi.');
+}
+
+// Simulasi 1 Poin Acak
+function runRandomSingleHit() {
+  const corners = ['BLUE', 'RED'];
+  const actions = [
+    { action: 'PUNCH', pts: 1 },
+    { action: 'BODY_KICK', pts: 2 },
+    { action: 'HEAD_KICK', pts: 3 },
+    { action: 'GAMJEOM', pts: 0 }
+  ];
+
+  const chosenCorner = corners[Math.floor(Math.random() * corners.length)];
+  const chosenAction = actions[Math.floor(Math.random() * actions.length)];
+
+  recordScoreAction(chosenCorner, chosenAction.action, chosenAction.pts);
+}
+
 // ============================================================================
 // 7. INITIALIZATION & EVENT LISTENERS
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  initArenaBroadcast();
   await initIndexedDB();
   renderScores();
   updateTimerDisplay();
@@ -467,6 +713,70 @@ document.addEventListener('DOMContentLoaded', async () => {
     playBuzzerSound('buzzer');
   });
 
+  // Tombol Deklarasi Pemenang
+  document.getElementById('btn-declare-winner')?.addEventListener('click', () => {
+    const winner = currentMatch.bluePoints >= currentMatch.redPoints ? 'BLUE' : 'RED';
+    broadcastToDisplay('DECLARE_WINNER', {
+      winnerCorner: winner,
+      finalScore: `${currentMatch.bluePoints} - ${currentMatch.redPoints}`
+    });
+    logStreamPacket('P2P', 'DECLARE_WINNER', `Wasit mendeklarasikan pemenang partai: Sudut ${winner}!`, {
+      winner,
+      score: `${currentMatch.bluePoints} - ${currentMatch.redPoints}`
+    });
+    alert(`Pemenang dideklarasikan: Sudut ${winner === 'BLUE' ? 'CHONG (Biru)' : 'HONG (Merah)'}!`);
+  });
+
+  // Tombol Buka Display Monitor (Window / Tab Baru)
+  document.getElementById('btn-open-display')?.addEventListener('click', () => {
+    window.open('/turn-pro/display.html', '_blank', 'width=1280,height=800,menubar=no,toolbar=no');
+    logStreamPacket('P2P', 'WINDOW_OPEN', 'Layar Display Monitor Gelanggang dibuka di jendela terpisah');
+  });
+
+  // Tombol Split-Screen Simulator
+  const splitPanel = document.getElementById('split-simulator-panel');
+  document.getElementById('btn-toggle-split')?.addEventListener('click', () => {
+    splitPanel?.classList.toggle('hidden');
+    if (!splitPanel?.classList.contains('hidden')) {
+      broadcastCurrentState();
+    }
+  });
+  document.getElementById('btn-close-split')?.addEventListener('click', () => {
+    splitPanel?.classList.add('hidden');
+  });
+  document.getElementById('btn-refresh-split')?.addEventListener('click', () => {
+    const iframe = document.getElementById('split-iframe');
+    if (iframe) iframe.src = '/turn-pro/display.html';
+  });
+
+  // Tombol Burst Stream Simulation
+  document.getElementById('btn-burst-stream')?.addEventListener('click', runBurstStreamSimulation);
+
+  // Tombol Stream Toolbar
+  document.getElementById('btn-stream-random')?.addEventListener('click', runRandomSingleHit);
+  document.getElementById('btn-clear-stream')?.addEventListener('click', () => {
+    streamLogsMemory.length = 0;
+    const terminal = document.getElementById('stream-terminal');
+    if (terminal) terminal.innerHTML = '';
+  });
+
+  const btnAutoScroll = document.getElementById('btn-autoscroll-stream');
+  btnAutoScroll?.addEventListener('click', () => {
+    streamAutoScroll = !streamAutoScroll;
+    btnAutoScroll.textContent = `Auto-Scroll: ${streamAutoScroll ? 'ON' : 'OFF'}`;
+    btnAutoScroll.style.background = streamAutoScroll ? '#047857' : '#4b5563';
+  });
+
+  // Filter Tabs Stream
+  document.querySelectorAll('.stream-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.stream-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeStreamFilter = tab.dataset.filter || 'ALL';
+      renderAllStreamRows();
+    });
+  });
+
   // Event Keypad Chong (Biru)
   document.querySelectorAll('.btn-blue-action').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -495,3 +805,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateNetworkUI();
   });
 });
+

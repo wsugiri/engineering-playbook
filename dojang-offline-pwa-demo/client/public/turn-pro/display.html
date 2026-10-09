@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Display Monitor Gelanggang 1 - Dojang Turn Pro</title>
+  <link rel="stylesheet" href="/turn-pro/display.css">
+  <link rel="manifest" href="/turn-pro/manifest.json">
+  <meta name="theme-color" content="#030712">
+</head>
+<body>
+
+  <!-- Arena Top Banner -->
+  <header class="display-topbar">
+    <div class="topbar-left">
+      <span class="arena-badge">GELANGGANG 1</span>
+      <span class="tournament-title">DOJANG CHAMPIONSHIP OPEN 2026</span>
+    </div>
+    <div class="match-meta" id="display-category">
+      SEMIFINAL • SENIOR PUTRA KYORUGI UNDER 68KG (PARTAI #101)
+    </div>
+    <div class="topbar-right">
+      <div id="net-badge" class="badge-status status-online">
+        <span class="pulse-dot"></span>
+        <span id="net-text">ONLINE</span>
+      </div>
+      <div id="channel-badge" class="badge-status status-p2p" title="Koneksi Lokal BroadcastChannel: dojang_arena_channel">
+        <span class="p2p-dot"></span>
+        <span id="channel-text">⚡ P2P LINK AKTIF (0ms)</span>
+      </div>
+      <button id="btn-toggle-test" class="btn-icon" title="Buka Kontrol Test Simulasi">🛠️ Test</button>
+      <button id="btn-toggle-inspector" class="btn-icon" title="Buka Stream Telemetry Log">📡 Stream Log</button>
+      <button id="btn-sound-toggle" class="btn-icon" title="Toggle Suara Buzzer">🔊</button>
+      <button id="btn-fullscreen" class="btn-icon" title="Layar Penuh (F11 / HDMI)">⛶</button>
+    </div>
+  </header>
+
+  <!-- Collapsible Standalone Quick Test Bar (Memudahkan pengujian langsung di layar display) -->
+  <div id="quick-test-bar" class="quick-test-bar hidden">
+    <div class="test-bar-inner">
+      <span class="test-bar-title">🛠️ Simulasi Langsung Display:</span>
+      <button class="btn-test btn-test-blue" id="test-blue-point">+2 Tendangan Chong</button>
+      <button class="btn-test btn-test-blue" id="test-blue-gamjeom">+1 Gam-jeom Chong</button>
+      <button class="btn-test btn-test-timer" id="test-timer-toggle">▶ Mulai / Jeda Timer</button>
+      <button class="btn-test btn-test-red" id="test-red-point">+2 Tendangan Hong</button>
+      <button class="btn-test btn-test-red" id="test-red-gamjeom">+1 Gam-jeom Hong</button>
+      <button class="btn-test" id="test-declare-winner" style="background: #eab308; color: #000;">🏆 Pemenang</button>
+      <button class="btn-test" id="test-reset-match" style="background: #475569;">↺ Reset</button>
+      <button id="btn-close-test-bar" class="btn-test" style="background: #dc2626;">✕ Tutup</button>
+    </div>
+  </div>
+
+  <!-- Last Action Hit Notification Banner -->
+  <div id="hit-banner" class="hit-banner hidden">
+    <div class="hit-content" id="hit-content">
+      <span class="hit-corner-tag" id="hit-corner-tag">CHONG</span>
+      <span class="hit-text" id="hit-text">+2 TENDANGAN BADAN</span>
+    </div>
+  </div>
+
+  <!-- Stadium LED Scoreboard -->
+  <main class="display-main">
+    
+    <!-- SUDUT BIRU (CHONG) -->
+    <section class="stadium-corner corner-chong" id="corner-chong-card">
+      <div class="corner-header">
+        <div class="corner-label">CHONG 靑</div>
+        <div class="fighter-name" id="chong-name">Ahmad Rayhan</div>
+        <div class="fighter-club" id="chong-club">Garuda Taekwondo Club</div>
+      </div>
+
+      <div class="score-wrapper">
+        <div class="led-score" id="chong-score">0</div>
+      </div>
+
+      <div class="gamjeom-display">
+        <div class="gamjeom-header">
+          <span>GAM-JEOM (PELANGGARAN)</span>
+          <span class="gamjeom-numeric" id="chong-gamjeom-num">0 / 5</span>
+        </div>
+        <div class="gamjeom-dots" id="chong-gamjeom-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTER PANEL (RONDE & TIMER LED) -->
+    <section class="stadium-center">
+      <div class="round-card">
+        <div class="round-caption">RONDE</div>
+        <div class="round-digit" id="display-round">1</div>
+      </div>
+
+      <div class="timer-led-card" id="timer-led-card">
+        <div class="timer-led-digits" id="display-timer">02:00</div>
+        <div class="timer-state-pill" id="display-timer-state">STANDBY</div>
+      </div>
+
+      <div class="center-footer-info">
+        <div class="rule-spec">BEST OF 3 ROUNDS • 2 MIN</div>
+        <div class="stream-stat" id="last-stream-time">Terhubung ke Operator</div>
+        <div class="heartbeat-indicator" id="heartbeat-text">● Operator Link: Aktif (Ping &lt;1ms)</div>
+      </div>
+    </section>
+
+    <!-- SUDUT MERAH (HONG) -->
+    <section class="stadium-corner corner-hong" id="corner-hong-card">
+      <div class="corner-header">
+        <div class="corner-label">HONG 紅</div>
+        <div class="fighter-name" id="hong-name">Budi Santoso</div>
+        <div class="fighter-club" id="hong-club">Rajawali Martial Art</div>
+      </div>
+
+      <div class="score-wrapper">
+        <div class="led-score" id="hong-score">0</div>
+      </div>
+
+      <div class="gamjeom-display">
+        <div class="gamjeom-header">
+          <span>GAM-JEOM (PELANGGARAN)</span>
+          <span class="gamjeom-numeric" id="hong-gamjeom-num">0 / 5</span>
+        </div>
+        <div class="gamjeom-dots" id="hong-gamjeom-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Winner Overlay Modal -->
+  <div id="winner-modal" class="winner-modal hidden">
+    <div class="winner-card" id="winner-card">
+      <div class="winner-trophy">🏆</div>
+      <div class="winner-subtitle">PEMENANG PARTAI #101</div>
+      <div class="winner-corner" id="winner-corner-text">CHONG (BIRU)</div>
+      <div class="winner-name" id="winner-name-text">Ahmad Rayhan</div>
+      <div class="winner-club" id="winner-club-text">Garuda Taekwondo Club</div>
+      <div class="winner-score" id="winner-score-text">SKOR AKHIR: 14 - 9</div>
+      <button id="btn-close-winner" class="btn-close-winner">Kembali ke Arena</button>
+    </div>
+  </div>
+
+  <!-- Telemetry Stream Inspector Modal / Drawer -->
+  <div id="stream-inspector-drawer" class="stream-inspector-drawer hidden">
+    <div class="inspector-header">
+      <div class="inspector-title">
+        <span>📡 STREAM TELEMETRY INSPECTOR (dojang_arena_channel)</span>
+        <span class="badge-status status-p2p" id="inspector-p2p-badge">P2P CHANNEL AKTIF</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="btn-clear-inspector" class="btn-ctrl" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">🧹 Clear</button>
+        <button id="btn-close-inspector" class="btn-ctrl" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #dc2626;">✕ Tutup</button>
+      </div>
+    </div>
+    <div class="inspector-logs" id="inspector-logs">
+      <div class="inspector-row">
+        <span class="insp-time">[00:00:00]</span>
+        <span class="insp-tag tag-p2p">INIT_CHANNEL</span>
+        <span class="insp-text">BroadcastChannel 'dojang_arena_channel' siap menerima data stream dari operator.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Stream Ticker Bar -->
+  <footer class="display-ticker">
+    <div class="ticker-left">
+      <span class="ticker-title">📡 DATA STREAM:</span>
+      <span class="ticker-message" id="ticker-message">Menunggu sinyal paket dari operator gelanggang...</span>
+    </div>
+    <div class="ticker-right">
+      <span class="ticker-packet" id="ticker-packet">0 PACKETS RCVD</span>
+      <span class="ticker-latency" id="ticker-latency">LATENCY: &lt; 1ms</span>
+    </div>
+  </footer>
+
+  <script src="/turn-pro/display.js"></script>
+</body>
+</html>
