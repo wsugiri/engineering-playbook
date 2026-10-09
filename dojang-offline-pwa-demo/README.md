@@ -216,6 +216,13 @@ Untuk menampilkan papan skor digital ke TV/Proyektor gelanggang tanpa perlu kone
   - **Dual-Layer Fallback**: Dilengkapi fallback otomatis ke `window.addEventListener('storage')` melalui `localStorage` jika browser lama tidak mendukung BroadcastChannel.
   - **Heartbeat & Liveness Watchdog**: Operator mengirim sinyal detak jantung berkala setiap 2.5 detik untuk memastikan link monitor aktif dan mengukur latensi (ping < 1ms).
 
+#### ❓ Mengapa Bisa Bekerja Tanpa Cloud Credentials? (Browser-Native Pub/Sub vs Cloud Pub/Sub)
+Banyak developer mengira arsitektur Pub/Sub selalu membutuhkan cloud broker seperti AWS SNS/SQS, Google Cloud Pub/Sub, Pusher, atau Redis yang mewajibkan API Key / Secret Key:
+* **Bukan Cloud Broker:** Pola Pub/Sub di sini adalah **fitur native browser (W3C HTML Living Standard)**.
+* **Keamanan Berbasis Same-Origin Policy (SOP):** Browser menjamin bahwa pesan channel `dojang_arena_channel` **hanya** dapat didengar oleh halaman web dari domain dan port yang persis sama (`origin-isolated`).
+* **Skenario Gelanggang Nyata:** Di gelanggang turnamen, laptop operator dihubungkan ke TV/Videotron penonton lewat kabel HDMI (*Extended Display*). Operator membuka konsol di layar laptop dan display monitor di layar TV. Karena kedua tab berjalan di browser yang sama, komunikasi berlangsung murni via RAM komputer lokal (*zero network packet*).
+* **Kapan Cloud Credentials Dibutuhkan?** Cloud credentials / API token **hanya** dibutuhkan saat data outbox pertandingan disinkronkan ke cloud backend (`POST /api/turn-pro/sync`) saat internet venue kembali pulih.
+
 ---
 
 ## 5. Implementasi AWS: API Gateway & S3 Mapping
@@ -299,6 +306,15 @@ Server akan aktif di `http://localhost:3000`.
    * Sistem mendeteksi koneksi pulih dan langsung mengeksekusi sinkronisasi outbox ke server.
    * Status antrean berubah menjadi **✓ Tersinkronisasi** secara otomatis!
 
+5. **Uji Coba Layar Display Monitor (TV / Proyektor Arena):**
+   * Klik tombol toska: **"📺 Buka Display Monitor Gelanggang"** (terbuka di tab/window terpisah) atau tombol ungu: **"🪟 Simulasi Split-Screen"** untuk melihat preview di halaman yang sama.
+   * Coba tekan tombol poin di konsol operator: Perhatikan layar display monitor langsung terupdate seketika (*zero delay*), suara beep berbunyi, dan muncul notifikasi *hit banner*!
+   * Klik **"🏆 Deklarasi Pemenang"** untuk memicu layar kemenangan resmi (*Winner Overlay*).
+
+6. **Uji Coba Telemetri Stream Data & Burst Test:**
+   * Klik tombol oranye: **"⚡ Burst Test (5 Stream Data Sekaligus)"**.
+   * Amati terminal **Telemetri Stream Data** di bagian bawah konsol: Anda dapat melihat paket data yang dipancarkan secara lokal (`tag-p2p`), antrean lokal (`tag-outbox`), serta respons server (`tag-cloud-ack`).
+
 ---
 
 ## 7. Verifikasi di Browser Developer Tools
@@ -313,4 +329,4 @@ Untuk memastikan arsitektur berjalan sesuai standar browser:
    * Buka database `DojangTurnProDB`.
    * Buka object store `outbox` untuk melihat seluruh rekaman transaksi poin pertandingan yang disimpan secara lokal.
 4. **Cache Storage:**
-   * Buka `turn-pro-v1` untuk memverifikasi file HTML, CSS, JS arena pertandingan telah di-cache.
+   * Buka `turn-pro-v2` untuk memverifikasi file HTML, CSS, JS arena pertandingan dan display monitor telah di-cache.
