@@ -207,14 +207,111 @@ Setiap kali tombol poin atau gam-jeom ditekan:
 * Server memproses secara **idempotent** (mencegah duplikasi data poin).
 * Setelah mendapat respon sukses, status event di IndexedDB diubah menjadi `synced: true`.
 
-### 5. Display Monitor Gelanggang & BroadcastChannel API (`dojang_arena_channel`)
-Untuk menampilkan papan skor digital ke TV/Proyektor gelanggang tanpa perlu koneksi internet atau server perantara:
+### 5. Display Monitor Gelanggang & Mekanisme Pub/Sub Lokal
+
+Untuk menampilkan papan skor digital ke TV/Proyektor gelanggang tanpa perlu koneksi internet, WebSocket, atau server perantara:
 * **Halaman Display Khusus**: `/turn-pro/display.html` (dapat dibuka di layar sekunder via HDMI / proyektor arena).
-* **Komunikasi Ultra-Low Latency (< 1ms)**: Menggunakan native W3C **`BroadcastChannel` API** pada channel `dojang_arena_channel`.
-  - Browser melakukan *Inter-Process Communication (IPC)* langsung di memori antar tab/jendela dalam 1 origin (`dojang.com`).
-  - **100% Offline Capability**: Tidak membutuhkan kabel LAN router, WiFi gelanggang, WebSocket server, atau cloud bridge!
-  - **Dual-Layer Fallback**: Dilengkapi fallback otomatis ke `window.addEventListener('storage')` melalui `localStorage` jika browser lama tidak mendukung BroadcastChannel.
-  - **Heartbeat & Liveness Watchdog**: Operator mengirim sinyal detak jantung berkala setiap 2.5 detik untuk memastikan link monitor aktif dan mengukur latensi (ping < 1ms).
+* **Arsitektur Pub/Sub**: Menggabungkan **BroadcastChannel API**, **Storage Event Fallback**, dan **Heartbeat Watchdog**.
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                      LAPTOP OPERATOR GELANGGANG                        │
+│                                                                        │
+│   [Tab Operator: turn-pro.js]           [Tab Display: display.js]      │
+│      (Layar Laptop Operator)               (Layar TV LED / Proyektor)  │
+│                 │                                     ▲                │
+│                 │ (1) Publish Event                   │ (2) Subscribe  │
+│                 ▼                                     │                │
+│  ┌───────────────────────────────────────────────────────────────┐     │
+│  │               KANAL LOKAL: 'dojang_arena_channel'             │     │
+│  │                                                               │     │
+│  │  1. W3C BroadcastChannel API (< 1ms RAM IPC)  [JALUR UTAMA]   │     │
+│  │  2. window.storage Event (localStorage)       [FALLBACK]      │     │
+│  │  3. Heartbeat & Watchdog (Liveness & Ping)    [MONITORING]    │     │
+│  └───────────────────────────────────────────────────────────────┘     │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### A. Cara Kerja BroadcastChannel API (Jalur Utama - Pub/Sub Ultra-Low Latency)
+* **Konsep**: BroadcastChannel adalah Web API W3C native yang menyediakan pipa komunikasi *Publish-Subscribe (Pub/Sub)* antar dokumen/tab pada *origin* (domain dan port) yang sama langsung di memori browser (*RAM Structured Clone*).
+* **Alur Eksekusi**:
+  1. **Subscribe (Display Monitor)**: Saat `display.js` aktif, dibuat instance:
+     ```javascript
+     const arenaChannel = new BroadcastChannel('dojang_arena_channel');
+     arenaChannel.onmessage = (event) => handleInboundMessage(event.data);
+     ```
+  2. **Handshake Awal (`REQUEST_INITIAL_STATE`)**: Begitu layar display pertama kali dibuka atau di-refresh, display mem-broadcast pesan:
+     ```javascript
+     arenaChannel.postMessage({ type: 'REQUEST_INITIAL_STATE' });
+     ```
+     Tab operator yang mendengarkan akan langsung membalas dengan snapshot state pertandingan (`STATE_SYNC`), sehingga skor langsung sinkron tanpa harus menunggu ronde berikutnya.
+  3. **Publish (Operator)**: Setiap aksi skor atau timer di `turn-pro.js` dikirim via:
+     ```javascript
+     arenaChannel.postMessage({ type: 'SCORE_HIT', ...payload });
+     ```
+  4. **Karakteristik**: Latensi transmisi **< 1 milidetik (0ms)** karena data tidak keluar ke kartu jaringan (NIC) atau router, melainkan langsung ditransfer antar proses browser. Pesan yang dipublish hanya diterima oleh tab lawan (tidak memantul ke pengirim).
+
+---
+
+#### B. Cara Kerja Storage Event (Jalur Cadangan / Fallback Lintas Browser)
+* **Konsep**: Mekanisme cadangan jika `BroadcastChannel` dinonaktifkan oleh kebijakan browser tertentu atau pada browser lama. Memanfaatkan event native `window.addEventListener('storage')`.
+* **Alur Eksekusi**:
+  1. Saat operator mem-publish aksi di `turn-pro.js`, selain mengirim ke `BroadcastChannel`, ia juga menuliskan event ke `localStorage`:
+     ```javascript
+     localStorage.setItem('dojang_arena_broadcast_event', JSON.stringify(payload));
+     ```
+  2. Sesuai spesifikasi HTML5 Storage API, penulisan `setItem` akan **secara otomatis menembakkan event `'storage'` ke SELURUH tab atau window LAIN** di origin yang sama (tab pengirim tidak menerima event ini).
+  3. Di `display.js`, listener menangkap event tersebut:
+     ```javascript
+     window.addEventListener('storage', (e) => {
+       if (e.key === 'dojang_arena_broadcast_event' && e.newValue) {
+         const payload = JSON.parse(e.newValue);
+         handleInboundMessage(payload);
+       }
+     });
+     ```
+  4. **Keuntungan**: Memberikan redundansi ganda (*high availability*) agar layar gelanggang tidak pernah kehilangan sinkronisasi.
+
+---
+
+#### C. Cara Kerja HEARTBEAT (Deteksi Liveness & Watchdog Operator)
+* **Konsep**: Pola detak jantung (*keep-alive watchdog*) untuk memantau apakah tab operator masih aktif, mengalami crash/hang, atau tidak sengaja tertutup.
+* **Alur Eksekusi**:
+  1. **Transmitter (Operator - setiap 2,5 detik)**: `turn-pro.js` menjalankan interval pengirim sinyal detak:
+     ```javascript
+     setInterval(() => {
+       arenaChannel.postMessage({
+         type: 'HEARTBEAT',
+         timestamp: Date.now(),
+         matchId: currentMatch.matchId
+       });
+     }, 2500);
+     ```
+  2. **Receiver & Ping Calculator (Display Monitor)**: Saat pesan `HEARTBEAT` tiba di `display.js`:
+     ```javascript
+     case 'HEARTBEAT':
+       lastHeartbeatTime = Date.now();
+       const ping = Math.max(0, Date.now() - (data.timestamp || Date.now()));
+       elHeartbeatText.textContent = `● Operator Link: Aktif (Ping ${ping}ms)`;
+       elHeartbeatText.classList.remove('stale');
+       break;
+     ```
+     Display mencatat `lastHeartbeatTime` dan menghitung latensi transmisi lokal (`Date.now() - timestamp`).
+  3. **Liveness Watchdog (Display Monitor - setiap 2 detik)**: Display menjalankan timer mandiri untuk memeriksa keabsahan sinyal:
+     ```javascript
+     setInterval(() => {
+       const diff = Date.now() - lastHeartbeatTime;
+       if (diff > 7000) { // Lebih dari 7 detik tidak ada sinyal operator
+         elHeartbeatText.textContent = '⚠️ Operator Link: Standby / Menunggu Sinyal';
+         elHeartbeatText.classList.add('stale');
+       }
+     }, 2000);
+     ```
+  4. **Keuntungan Operasional**: Juri dan penonton dapat langsung mengetahui jika laptop operator mengalami kendala teknis (indikator berubah menjadi kuning/stale) tanpa perlu menebak-nebak apakah pertandingan sedang pause atau sistem terputus.
+
+---
 
 #### ❓ Mengapa Bisa Bekerja Tanpa Cloud Credentials? (Browser-Native Pub/Sub vs Cloud Pub/Sub)
 Banyak developer mengira arsitektur Pub/Sub selalu membutuhkan cloud broker seperti AWS SNS/SQS, Google Cloud Pub/Sub, Pusher, atau Redis yang mewajibkan API Key / Secret Key:
