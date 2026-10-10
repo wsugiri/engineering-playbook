@@ -49,13 +49,13 @@ Berikut struktur arsitektur project yang direkomendasikan:
 
 ```text
 fcm-nodejs-demo/
-├── client/                              # 📱 Frontend (Web Client)
+├── client/                              # 📱 Frontend (Web Client - Vite)
 │   ├── public/
-│   │   ├── firebase-messaging-sw.js     # ⚠️ WAJIB: Service Worker untuk notifikasi di background browser
-│   │   └── index.html                   # Halaman UI Web
+│   │   └── firebase-messaging-sw.js     # ⚠️ WAJIB: Service Worker untuk notifikasi di background browser
 │   ├── src/
 │   │   ├── firebase-config.js           # Inisialisasi Firebase Web SDK (Client)
-│   │   └── app.js                       # Logic minta izin notifikasi & kirim token ke server
+│   │   └── app.js                       # Logic minta izin notifikasi, toast pop-up, & kirim token
+│   ├── index.html                       # Entry point UI Web (Wajib di root client untuk Vite)
 │   ├── package.json
 │   └── .env                             # VAPID Key & Public Firebase Web Config
 │
@@ -871,3 +871,125 @@ Saat mengirim pesan, Firebase Admin SDK akan melempar error code jika terjadi ke
    - Update token di database setiap kali aplikasi client melakukan update/login baru.
 4. **Keamanan Kredensial**
    - Pada cloud provider (AWS / GCP / Docker / Kubernetes), hindari hardcode file JSON. Anda dapat memanfaatkan environment variable stringified JSON atau IAM Workload Identity jika berada di Google Cloud.
+
+---
+
+## 9. Panduan Menjalankan & Menguji Demo Secara Lokal
+
+Aplikasi demo ini terdiri dari dua sisi: **Server (Node.js)** dan **Client (Vite Web App)**.
+
+### 9.1. Menjalankan Backend Server
+1. Masuk ke folder server dan pasang dependensi:
+   ```bash
+   cd fcm-nodejs-demo/server
+   npm install
+   ```
+2. Letakkan file kredensial `service-account.json` dari Firebase Console di dalam folder `server/`.
+3. Pastikan file `.env` di folder `server/` terisi:
+   ```env
+   PORT=3000
+   FIREBASE_SERVICE_ACCOUNT_PATH=./service-account.json
+   ```
+4. Jalankan server:
+   ```bash
+   npm start
+   ```
+   *Server akan berjalan di `http://localhost:3000` dan menginisialisasi listener Pub/Sub.*
+
+### 9.2. Menjalankan Frontend Web Client
+1. Buka terminal baru, masuk ke folder client:
+   ```bash
+   cd fcm-nodejs-demo/client
+   npm install
+   ```
+2. Buat / lengkapi file `.env` di folder `client/` dengan konfigurasi Web App & VAPID Key:
+   ```env
+   VITE_FIREBASE_API_KEY=AIzaSy...
+   VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=335732295529
+   VITE_FIREBASE_APP_ID=1:335732295529:web:abcdef
+   VITE_FIREBASE_VAPID_KEY=B... (Kunci Web Push Certificates)
+   VITE_API_BASE_URL=http://localhost:3000
+   ```
+3. Sesuaikan juga objek `firebaseConfig` di file `client/public/firebase-messaging-sw.js` agar sama dengan konfigurasi di atas.
+4. Jalankan client:
+   ```bash
+   npm run dev
+   ```
+   *Buka antarmuka web di browser pada `http://localhost:5173`.*
+
+### 9.3. Alur Pengujian Notifikasi
+1. **Minta Izin & Terbitkan Token**:
+   - Di browser `http://localhost:5173`, klik tombol biru **"1. Minta Izin & Ambil FCM Token"**.
+   - Klik **Allow** pada pop-up izin notifikasi browser.
+   - String FCM registration token perangkat Anda akan otomatis muncul di textarea.
+2. **Daftarkan Token ke Server**:
+   - Klik tombol hijau **"2. Kirim Token ke Server"** (User ID default: `user_123`).
+   - Log akan mencatat: `✅ Token berhasil disimpan di server untuk User [user_123]!`.
+3. **Kirim Notifikasi via Curl (HTTP Sync)**:
+   ```bash
+   curl -X POST http://localhost:3000/api/notifications/send-user \
+     -H "Content-Type: application/json" \
+     -d '{
+       "userId": "user_123",
+       "title": "Halo dari FCM! 👋",
+       "body": "Notifikasi Push berhasil masuk ke layar Anda!"
+     }'
+   ```
+4. **Kirim Notifikasi via Event Pub/Sub (Async Worker)**:
+   ```bash
+   curl -X POST http://localhost:3000/api/events/publish \
+     -H "Content-Type: application/json" \
+     -d '{
+       "topic": "order-events",
+       "eventData": {
+         "eventType": "ORDER_PAID",
+         "orderId": "ORD-2026",
+         "totalAmount": 250000,
+         "userId": "user_123"
+       }
+     }'
+   ```
+   - **Saat Tab Aktif (Foreground)**: Muncul notifikasi Toast animasi di pojok kanan atas layar web.
+   - **Saat Tab Di-minimize / Background**: Muncul pop-up banner push notification native OS.
+
+---
+
+## 10. Panduan Deployment ke Cloud (AWS / GCP) & Registrasi Domain
+
+Ketika aplikasi di-deploy ke lingkungan server cloud (seperti AWS ECS/EC2/S3 atau GCP Cloud Run/GKE/Compute Engine), perhatikan aspek-aspek berikut:
+
+### 10.1. Apakah Perlu Mendaftarkan Domain?
+
+#### A. Sisi Frontend (Web Client / PWA):
+1. **Wajib Menggunakan HTTPS (SSL/TLS)**:
+   - Standar keamanan browser (W3C Push API & Service Worker) **mewajibkan protokol HTTPS**.
+   - Service Worker **tidak akan bisa aktif** pada domain publik berprotokol HTTP biasa (hanya `localhost` yang diizinkan untuk development).
+   - Oleh karena itu, domain web Anda (misal `https://app.domainanda.com`) wajib dipasangi sertifikat SSL (misal via AWS Certificate Manager + CloudFront, atau GCP Cloud Load Balancing / Let's Encrypt).
+2. **Authorized Domains di Firebase Console**:
+   - Jika Anda menggunakan **Firebase Authentication** untuk login pengguna, domain web Anda wajib didaftarkan di:  
+     **Firebase Console -> Authentication -> Settings -> Authorized domains** -> klik **Add domain**.
+   - Untuk Web Push FCM sendiri, otentikasi client dilakukan melalui pasangan **VAPID Key (Key Pair)** yang dicocokkan oleh Google Push Service, sehingga domain tidak wajib didaftarkan di panel tersendiri selain memastikan HTTPS aktif dan CORS diizinkan.
+
+#### B. Sisi Backend (Node.js API Server):
+1. **Pengaturan CORS (Cross-Origin Resource Sharing)**:
+   - Di `server/src/server.js`, atur whitelist domain frontend produksi Anda agar browser tidak memblokir fetch API register token:
+     ```javascript
+     app.use(cors({
+       origin: ['https://app.domainanda.com', 'https://admin.domainanda.com'],
+       credentials: true
+     }));
+     ```
+2. **Manajemen Kredensial Firebase di Cloud**:
+   - **Google Cloud Platform (GCP)** (Cloud Run / GKE / GCE):
+     - **Rekomendasi Utama**: Tidak perlu mengunggah file `service-account.json`. Cukup pasang Service Account GCP dengan role `Firebase Admin SDK Administrator` pada Cloud Run atau VM Anda.
+     - Firebase Admin SDK otomatis mendeteksi kredensial dari lingkungan (*Application Default Credentials* / ADC):
+       ```javascript
+       admin.initializeApp(); // Otomatis membaca ADC tanpa file json!
+       ```
+   - **Amazon Web Services (AWS)** (ECS / EC2 / Lambda):
+     - Simpan isi `service-account.json` di **AWS Secrets Manager** atau **SSM Parameter Store**.
+     - Inject sebagai environment variable (misal `FIREBASE_CONFIG_BASE64` atau mount file secara aman di runtime container), hindari menyimpan file kredensial ke Docker image publik.
+

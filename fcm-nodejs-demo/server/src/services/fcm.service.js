@@ -1,5 +1,12 @@
 const { messaging } = require('../config/firebase');
 
+function getMessaging() {
+  if (!messaging) {
+    throw new Error('Firebase Admin SDK belum diinisialisasi. Pastikan file service-account.json valid.');
+  }
+  return messaging;
+}
+
 /**
  * Kirim notifikasi ke 1 token perangkat
  */
@@ -33,7 +40,7 @@ async function sendToToken({ token, title, body, data = {}, imageUrl }) {
     }
   };
 
-  return await messaging.send(message);
+  return await getMessaging().send(message);
 }
 
 /**
@@ -53,7 +60,7 @@ async function sendMulticast({ tokens = [], title, body, data = {} }) {
     )
   };
 
-  const response = await messaging.sendEachForMulticast(message);
+  const response = await getMessaging().sendEachForMulticast(message);
 
   // Identifikasi token yang gagal atau sudah expired
   const failedTokens = [];
@@ -99,7 +106,7 @@ async function sendToTopic({ topic, title, body, data = {} }) {
     )
   };
 
-  return await messaging.send(message);
+  return await getMessaging().send(message);
 }
 
 /**
@@ -107,7 +114,7 @@ async function sendToTopic({ topic, title, body, data = {} }) {
  */
 async function subscribeTopic(tokens, topic) {
   const tokenList = Array.isArray(tokens) ? tokens : [tokens];
-  return await messaging.subscribeToTopic(tokenList, topic);
+  return await getMessaging().subscribeToTopic(tokenList, topic);
 }
 
 /**
@@ -115,7 +122,7 @@ async function subscribeTopic(tokens, topic) {
  */
 async function unsubscribeTopic(tokens, topic) {
   const tokenList = Array.isArray(tokens) ? tokens : [tokens];
-  return await messaging.unsubscribeFromTopic(tokenList, topic);
+  return await getMessaging().unsubscribeFromTopic(tokenList, topic);
 }
 
 module.exports = {

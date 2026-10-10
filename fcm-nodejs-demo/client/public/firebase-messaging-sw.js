@@ -6,12 +6,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-com
 // Catatan: Service Worker tidak bisa membaca import.meta.env secara langsung,
 // ganti placeholder berikut dengan credential Firebase project Anda:
 const firebaseConfig = {
-  apiKey: "AIzaSy_YOUR_API_KEY",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef"
+  apiKey: "AIzaSyBAwIlUMb57gABVPm6Wxi_4hhWUm03O3ZM",
+  authDomain: "gen-lang-client-0912255908.firebaseapp.com",
+  projectId: "gen-lang-client-0912255908",
+  storageBucket: "gen-lang-client-0912255908.appspot.com",
+  messagingSenderId: "335732295529",
+  appId: "1:335732295529:web:469cb41624596d6f785ff8"
 };
 
 firebase.initializeApp(firebaseConfig);

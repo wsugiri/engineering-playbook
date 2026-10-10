@@ -50,6 +50,11 @@ async function initFCM() {
       return;
     }
 
+    if (!VAPID_KEY || VAPID_KEY.includes('YOUR_PUBLIC_VAPID_KEY') || VAPID_KEY.includes('GANTI_DENGAN')) {
+      appendLog('⚠️ VAPID Key belum diset! Silakan isi VITE_FIREBASE_VAPID_KEY di file client/.env (diambil dari Firebase Console -> Cloud Messaging -> Web Push certificates).');
+      return;
+    }
+
     appendLog('🔑 Mengambil FCM Token dengan VAPID Key...');
     const token = await getToken(messaging, {
       vapidKey: VAPID_KEY,
@@ -98,13 +103,36 @@ async function registerTokenToServer() {
   }
 }
 
+function showToast(title, body) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `
+    <div class="toast-title">🔔 ${title || 'Notifikasi Masuk'}</div>
+    <div class="toast-body">${body || ''}</div>
+  `;
+  container.appendChild(toast);
+
+  // Otomatis hilangkan setelah 6 detik
+  setTimeout(() => {
+    toast.style.transition = 'opacity 0.5s ease';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 6000);
+}
+
 // 3. Listener Notifikasi Saat Tab Aktif (Foreground)
 onMessage(messaging, (payload) => {
-  appendLog(`📩 Notifikasi Foreground Masuk: ${payload.notification?.title} - ${payload.notification?.body}`);
+  const title = payload.notification?.title || payload.data?.title || 'Notifikasi Baru';
+  const body = payload.notification?.body || payload.data?.body || '';
+
+  appendLog(`📩 Notifikasi Foreground Masuk: ${title} - ${body}`);
   console.log('[Foreground message]', payload);
 
-  // Tampilkan alert atau custom toast UI
-  alert(`[Foreground Push]\nJudul: ${payload.notification?.title}\nPesan: ${payload.notification?.body}`);
+  // Tampilkan visual toast pop-up di layar
+  showToast(title, body);
 });
 
 // Event Listeners
