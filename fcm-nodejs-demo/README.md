@@ -993,3 +993,142 @@ Ketika aplikasi di-deploy ke lingkungan server cloud (seperti AWS ECS/EC2/S3 ata
      - Simpan isi `service-account.json` di **AWS Secrets Manager** atau **SSM Parameter Store**.
      - Inject sebagai environment variable (misal `FIREBASE_CONFIG_BASE64` atau mount file secara aman di runtime container), hindari menyimpan file kredensial ke Docker image publik.
 
+---
+
+## 11. Arsitektur Monorepo & Multi-Subpath (1 Domain, Build Terpisah)
+
+Dalam arsitektur monorepo modern (seperti pada studi kasus `dojang-offline-pwa-demo`), aplikasi sering kali dipecah menjadi beberapa modul mandiri di bawah **1 domain yang sama**:
+* `/` : **Core Portal** (Landing page & Login)
+* `/turn-pro/` : **Turn Pro** (Arena pertandingan tanding, scoreboard, offline-first)
+* `/coach/` : **Coach Portal** (Dashboard pelatih)
+
+Masing-masing modul memiliki proses build sendiri (misal Vite build ke folder terpisah) dan di-deploy ke direktori/S3 subpath masing-masing.
+
+---
+
+### 11.1. Mengapa Worker Default `/firebase-messaging-sw.js` Bermasalah pada Monorepo Subpath?
+
+Secara default, jika Anda hanya memanggil `getToken(messaging, { vapidKey })`, Firebase Web SDK akan **selalu mencari file `/firebase-messaging-sw.js` di root domain (`/`)**.
+
+Hal ini menimbulkan masalah serius:
+1. **Modul Terisolasi**: Modul subpath seperti `turn-pro` tidak memiliki akses/kendali untuk mengubah file di root domain Core.
+2. **Cold Start & Offline Blank**: Jika wasit membuka langsung `domain.com/turn-pro/` di lapangan (tanpa pernah membuka Core), worker di root Core belum pernah terpasang. Begitu offline, aplikasi tidak dapat berjalan.
+3. **Konflik Caching & Push Subscription**: Dua modul dengan kebutuhan caching yang bertolak belakang tidak bisa dipaksakan menggunakan 1 Service Worker root bersamaan.
+
+---
+
+### 11.2. Solusi: Dedicated Subpath SW via `serviceWorkerRegistration`
+
+Firebase SDK memungkinkan kita menghubungkan messaging dengan **Service Worker yang sudah didaftarkan sebelumnya** pada subpath modul:
+
+#### 1. Registrasi Eksplisit di Client Modul (`/turn-pro/turn-pro.js`):
+```javascript
+import { initializeApp } from 'firebase/app';
+import { getMessaging, getToken } from 'firebase/messaging';
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+async function initTurnProFCM() {
+  if (!('serviceWorker' in navigator)) return;
+
+  // 1. Registrasikan Service Worker lokal milik modul Turn Pro
+  const registration = await navigator.serviceWorker.register('/turn-pro/sw.js', {
+    scope: '/turn-pro/'
+  });
+
+  // 2. Minta izin notifikasi
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    // 3. ⚠️ KUNCI: Teruskan registration ke getToken agar tidak mencari SW root Core!
+    const token = await getToken(messaging, {
+      vapidKey: 'PASTE_YOUR_PUBLIC_VAPID_KEY',
+      serviceWorkerRegistration: registration
+    });
+
+    console.log('[Turn Pro] FCM Token:', token);
+    await registerTokenToBackend('operator_gelanggang_1', token);
+  }
+}
+```
+
+#### 2. Worker Terpadu di Subpath (`/turn-pro/sw.js`):
+Di dalam Service Worker modul subpath, gabungkan fungsionalitas **FCM Background Messaging** sekaligus **Offline Caching PWA**:
+
+```javascript
+// /turn-pro/sw.js
+
+// A. Load Firebase Messaging SDK Compat
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: "...",
+  projectId: "...",
+  messagingSenderId: "...",
+  appId: "..."
+});
+
+const messaging = firebase.messaging();
+
+// Handler notifikasi saat tab tidak fokus / diminimalkan
+messaging.onBackgroundMessage((payload) => {
+  const title = payload.notification?.title || 'Panggilan Gelanggang';
+  const options = {
+    body: payload.notification?.body,
+    icon: '/turn-pro/icons/icon-192.png',
+    data: payload.data
+  };
+  self.registration.showNotification(title, options);
+});
+
+// B. Fungsionalitas Offline-First & Mitigasi Konflik
+const CACHE_NAME = 'turnpro-cache-v1';
+
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Langsung aktifkan versi baru tanpa delay
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll([
+        '/turn-pro/',
+        '/turn-pro/index.html',
+        '/turn-pro/turn-pro.css',
+        '/turn-pro/turn-pro.js'
+      ]);
+    })
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(), // Langsung kendalikan tab seketika saat bernavigasi dari Core
+      // Bersihkan hanya cache milik Turn Pro
+      caches.keys().then((keys) => Promise.all(
+        keys
+          .filter((k) => k.startsWith('turnpro-') && k !== CACHE_NAME)
+          .map((k) => caches.delete(k))
+      ))
+    ])
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((res) => res || fetch(event.request))
+  );
+});
+```
+
+---
+
+### 11.3. Matriks Pencegahan Konflik Saat User Berpindah dari Core ke Subpath
+
+| Area | Potensi Masalah | Solusi Best Practice |
+| :--- | :--- | :--- |
+| **Routing / Fetch** | Core SW membajak navigasi ke `/turn-pro/` karena SPA fallback. | Tambahkan `if (url.pathname.startsWith('/turn-pro/')) return;` di event `fetch` milik Core SW. |
+| **Cache Storage** | Pembersihan cache Core menghapus cache Turn Pro. | Terapkan prefix nama cache: `core-*` vs `turnpro-*`. Hapus hanya yang berawalan prefix masing-masing. |
+| **Halaman Belum Terkontrol** | Subpath SW baru aktif setelah user me-refresh kedua kalinya. | Pasang `self.skipWaiting()` di `install` dan `self.clients.claim()` di `activate`. |
+| **FCM Push Target** | Token push terdaftar ke worker yang salah. | Selalu gunakan `{ serviceWorkerRegistration: registration }` pada fungsi `getToken()`. |
+
+

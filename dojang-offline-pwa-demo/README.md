@@ -149,23 +149,111 @@ Apakah aman mendaftarkan 2 Service Worker di 1 domain yang sama? **Aman**, namun
 
 ---
 
-### ⚠️ Best Practices Wajib untuk Multi-SW:
+### ⚠️ Best Practices Wajib untuk Multi-SW & Mitigasi Konflik
 
-1. **Namespace Cache Storage Wajib Dipisah:**
-   Hindari pembersihan cache membabi buta saat event `activate`. Berikan prefix unik per aplikasi:
-   ```javascript
-   // Di /turn-pro/sw.js
-   const EXPECTED_CACHES = ['turnpro-v1'];
-   caches.keys().then(keys => Promise.all(
-     keys
-       .filter(k => k.startsWith('turnpro-') && !EXPECTED_CACHES.includes(k))
-       .map(k => caches.delete(k))
-   ));
-   ```
-2. **Selalu Gunakan Trailing Slash:**
-   Gunakan `{ scope: '/turn-pro/' }` (jangan `/turn-pro` tanpa slash agar tidak mencocokkan path lain seperti `/turn-promosi`).
-3. **PWA Manifest Independen:**
-   Di file `/turn-pro/manifest.json`, pastikan `start_url` dan `scope` diarahkan ke `/turn-pro/` agar aplikasi Turn Pro bisa diinstal sebagai PWA mandiri di tablet/laptop wasit.
+#### Pertanyaan Kritis: "Jika User Mulai dari Core (`/`), Apakah Tidak Terjadi Konflik? Bagaimana Menghindarinya?"
+
+Browser secara native menerapkan aturan **Longest Prefix Match** (SW `/turn-pro/` otomatis memenangkan kendali atas dokumen di bawah `/turn-pro/*`). Namun, jika user membuka Core terlebih dahulu lalu berpindah ke Turn Pro, **potensi konflik nyata bisa terjadi** jika tidak diantisipasi.
+
+Berikut 4 risiko benturan dan solusi mitigasinya:
+
+---
+
+#### 1. Mencegah Core SW "Membajak" Navigasi Turn Pro (*Fetch Bypass*)
+* **Masalah**: Jika Core adalah Single Page Application (SPA) dan Service Worker Core (`/sw.js`) mengintersepsi semua event fetch dengan fallback `index.html` Core, navigasi user ke `/turn-pro/` bisa salah disajikan sebagai halaman Core.
+* **Solusi**: Di event `fetch` milik Core SW, tambahkan pengecualian (*bypass*) untuk seluruh subpath modul independen:
+  ```javascript
+  // Di /sw.js (Core Service Worker)
+  self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+
+    // ⛔ BYPASS: Jangan intersepsi request menuju subpath modul lain
+    if (url.pathname.startsWith('/turn-pro/') || url.pathname.startsWith('/coach/')) {
+      return; // Biarkan browser atau SW Turn Pro yang memproses langsung
+    }
+
+    // ✅ Normal fetch caching untuk Core
+    event.respondWith(
+      caches.match(event.request).then(res => res || fetch(event.request))
+    );
+  });
+  ```
+
+---
+
+#### 2. Isolasi Namespace Cache Storage (*Mencegah Penghapusan Cache Silang*)
+* **Masalah**: `CacheStorage` dan `IndexedDB` terikat pada **Origin** (`domain.com`), bukan per subpath. Jika Core SW atau Turn Pro SW melakukan pembersihan cache lama secara asal-asalan (`caches.delete()`), salah satu SW bisa menghapus cache milik modul lainnya.
+* **Solusi**: Terapkan prefix nama cache yang ketat:
+  ```javascript
+  // Di /sw.js (Core)
+  const CORE_PREFIX = 'core-app-';
+  const CURRENT_CORE_CACHE = 'core-app-v2';
+
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(
+      caches.keys().then(keys => Promise.all(
+        keys
+          .filter(k => k.startsWith(CORE_PREFIX) && k !== CURRENT_CORE_CACHE)
+          .map(k => caches.delete(k))
+      ))
+    );
+  });
+  ```
+  ```javascript
+  // Di /turn-pro/sw.js (Turn Pro)
+  const TURNPRO_PREFIX = 'turnpro-app-';
+  const CURRENT_TURNPRO_CACHE = 'turnpro-app-v1';
+
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(
+      caches.keys().then(keys => Promise.all(
+        keys
+          .filter(k => k.startsWith(TURNPRO_PREFIX) && k !== CURRENT_TURNPRO_CACHE)
+          .map(k => caches.delete(k))
+      ))
+    );
+  });
+  ```
+
+---
+
+#### 3. Immediate Claiming di Subpath SW (`skipWaiting` & `clients.claim`)
+* **Masalah**: Ketika user menyeberang dari Core ke Turn Pro, SW Turn Pro yang baru terinstall biasanya tidak langsung mengendalikan halaman aktif sampai halaman di-reload.
+* **Solusi**: Di `/turn-pro/sw.js`, langsung rebut kendali halaman seketika:
+  ```javascript
+  // Di /turn-pro/sw.js
+  self.addEventListener('install', (event) => {
+    self.skipWaiting(); // Langsung aktif tanpa menunggu SW lama selesai
+  });
+
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(self.clients.claim()); // Langsung kendalikan tab Turn Pro seketika
+  });
+  ```
+
+---
+
+#### 4. Integrasi Push Notification (FCM) pada Modul Subpath
+* **Masalah**: Secara default, Firebase Web SDK mencari worker di root domain (`/firebase-messaging-sw.js`), sehingga pendaftaran push notification di halaman Turn Pro bisa salah sasaran ke SW Core.
+* **Solusi**: Daftarkan Service Worker lokal Turn Pro dan teruskan instance registrasinya ke Firebase `getToken()`:
+  ```javascript
+  // Di /turn-pro/turn-pro.js
+  const registration = await navigator.serviceWorker.register('/turn-pro/sw.js', {
+    scope: '/turn-pro/'
+  });
+
+  // Hubungkan FCM dengan Service Worker lokal Turn Pro
+  const token = await getToken(messaging, {
+    vapidKey: 'YOUR_VAPID_KEY',
+    serviceWorkerRegistration: registration // 👈 Mencegah pencarian SW di root Core
+  });
+  ```
+
+---
+
+#### 5. Selalu Gunakan Trailing Slash pada Scope & Manifest
+* Gunakan `{ scope: '/turn-pro/' }` (jangan `/turn-pro` tanpa slash agar tidak mencocokkan path seperti `/turn-promosi`).
+* Di `/turn-pro/manifest.json`, pastikan `"start_url": "/turn-pro/"` dan `"scope": "/turn-pro/"` agar Turn Pro dapat diinstal sebagai PWA mandiri di tablet/laptop wasit.
 
 ---
 
