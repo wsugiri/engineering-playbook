@@ -1,0 +1,571 @@
+/* ==========================================================================
+   Dojang Turn Pro - Poomsae Stadium Display Monitor (TV / Videotron Arena)
+   ========================================================================== */
+
+:root {
+  --bg-stadium: #030712;
+  --bg-card: rgba(15, 23, 42, 0.85);
+  --border-color: rgba(51, 65, 85, 0.6);
+
+  --chong-blue: #2563eb;
+  --chong-light: #60a5fa;
+  --chong-glow: rgba(37, 99, 235, 0.5);
+
+  --hong-red: #dc2626;
+  --hong-light: #f87171;
+  --hong-glow: rgba(220, 38, 38, 0.5);
+
+  --gold: #f59e0b;
+  --gold-glow: rgba(245, 158, 11, 0.6);
+  --cyan: #06b6d4;
+  --green: #10b981;
+
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-stadium);
+  color: #fff;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* --------------------------------------------------------------------------
+   1. Stadium Display Top Bar
+   -------------------------------------------------------------------------- */
+.display-header {
+  background: rgba(11, 17, 32, 0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 2px solid var(--border-color);
+  padding: 0.8rem 1.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 20;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.court-pill {
+  background: linear-gradient(135deg, #0d9488, #059669);
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 0 16px rgba(13, 148, 136, 0.4);
+}
+
+.tournament-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #f1f5f9;
+  text-transform: uppercase;
+}
+
+.match-category-banner {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  letter-spacing: 0.03em;
+}
+
+.match-category-banner span {
+  color: var(--gold);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.p2p-pill {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-icon {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #fff;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-icon:hover {
+  background: #334155;
+}
+
+/* Standalone Quick Test Bar */
+.quick-test-bar {
+  background: #090e1a;
+  border-bottom: 1px solid #1e293b;
+  padding: 0.4rem 1.75rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  overflow-x: auto;
+}
+.quick-test-bar.hidden {
+  display: none;
+}
+
+.btn-test {
+  background: #1e293b;
+  color: #fff;
+  border: 1px solid #334155;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   2. Main Arena Display Layout
+   -------------------------------------------------------------------------- */
+.display-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem;
+  gap: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Center Form & Timer Bar */
+.center-meta-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 0.85rem 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.form-info-block {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.form-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+/* Stadium Timer */
+.display-timer-box {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.timer-status-tag {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.timer-status-tag.running {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.timer-big-digits {
+  font-family: var(--font-mono);
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #10b981;
+  text-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+  min-width: 170px;
+  text-align: center;
+}
+
+.timer-big-digits.critical {
+  color: #ef4444;
+  text-shadow: 0 0 30px rgba(239, 68, 68, 0.9);
+  animation: pulseBlink 0.7s infinite alternate;
+}
+
+@keyframes pulseBlink {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0.5; transform: scale(0.98); }
+}
+
+/* --------------------------------------------------------------------------
+   3. Split Corners (Chong vs Hong)
+   -------------------------------------------------------------------------- */
+.corners-display-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.display-corner-card {
+  background: var(--bg-card);
+  border: 3px solid var(--border-color);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+}
+
+.display-corner-card.corner-blue {
+  border-color: rgba(37, 99, 235, 0.5);
+}
+.display-corner-card.corner-red {
+  border-color: rgba(220, 38, 38, 0.5);
+}
+
+.display-corner-card.is-active-performer {
+  border-color: #3b82f6;
+  box-shadow: 0 0 45px var(--chong-glow);
+  transform: translateY(-4px);
+}
+.display-corner-card.corner-red.is-active-performer {
+  border-color: #ef4444;
+  box-shadow: 0 0 45px var(--hong-glow);
+}
+
+/* Active Arena Performer Badge */
+.live-performer-strip {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.corner-blue .live-performer-strip {
+  background: linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%);
+}
+.corner-red .live-performer-strip {
+  background: linear-gradient(90deg, #b91c1c 0%, #991b1b 100%);
+}
+
+.performer-status-text {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+/* Athlete Hero Banner */
+.athlete-profile {
+  padding: 1.25rem 2rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.athlete-name {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.athlete-dojang {
+  font-size: 1.05rem;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.athlete-dan-tag {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+/* Gigantic LED Score Box */
+.score-hero-container {
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.big-total-block {
+  text-align: center;
+}
+
+.big-total-label {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.big-total-score {
+  font-family: var(--font-mono);
+  font-size: 6rem;
+  font-weight: 900;
+  line-height: 1;
+  margin: 0.35rem 0;
+}
+
+.corner-blue .big-total-score {
+  color: #60a5fa;
+  text-shadow: 0 0 35px rgba(96, 165, 250, 0.6);
+}
+
+.corner-red .big-total-score {
+  color: #f87171;
+  text-shadow: 0 0 35px rgba(248, 113, 113, 0.6);
+}
+
+/* Secondary Breakdown (ACC, PRES, DED) */
+.secondary-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.score-pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.pill-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.pill-num {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+/* 5 Judges Visual Breakdown Bar */
+.judges-mini-bar {
+  flex: 1;
+  padding: 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.judges-strip-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  justify-content: space-between;
+}
+
+.judge-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+.judge-chip {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.judge-chip-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.judge-chip-score {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-top: 0.15rem;
+}
+
+.judge-chip.is-trimmed-chip {
+  opacity: 0.45;
+  background: rgba(0, 0, 0, 0.3);
+  border-color: #1e293b;
+}
+
+.judge-chip.is-trimmed-chip .judge-chip-score {
+  color: #64748b;
+  text-decoration: line-through;
+}
+
+/* --------------------------------------------------------------------------
+   4. Stadium Winner Celebration Screen
+   -------------------------------------------------------------------------- */
+.winner-celebration-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.96) 0%, rgba(3, 7, 18, 0.98) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: zoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.winner-celebration-overlay.hidden {
+  display: none;
+}
+
+.winner-banner-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-size: 1.2rem;
+  font-weight: 900;
+  padding: 0.6rem 2rem;
+  border-radius: 9999px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: 0 0 35px var(--gold-glow);
+  margin-bottom: 1.5rem;
+}
+
+.winner-athlete-title {
+  font-size: 4.5rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 50px rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.winner-dojang-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 2rem;
+}
+
+.winner-scores-comparison {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #334155;
+  padding: 1.5rem 3rem;
+  border-radius: 16px;
+}
+
+.winner-side {
+  text-align: center;
+}
+
+.winner-side-tag {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.winner-side-score {
+  font-family: var(--font-mono);
+  font-size: 3.8rem;
+  font-weight: 900;
+}
+
+.btn-close-winner {
+  margin-top: 2.5rem;
+  background: #374151;
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.75rem 2.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-close-winner:hover {
+  background: #4b5563;
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}

@@ -31,6 +31,16 @@ let displayState = {
   redPoints: 0,
   blueGamJeom: 0,
   redGamJeom: 0,
+  blueRoundWins: 0,
+  redRoundWins: 0,
+  blueIvrReady: true,
+  redIvrReady: true,
+  ivrReviewActive: false,
+  ivrReviewCorner: null,
+  stats: {
+    blue: { punch: 0, body: 0, head: 0 },
+    red: { punch: 0, body: 0, head: 0 }
+  },
   timerSeconds: 120,
   isTimerRunning: false,
   isOnline: navigator.onLine,
@@ -173,6 +183,63 @@ function updateDisplayUI() {
     } else {
       elNetBadge.className = 'badge-status status-offline';
       elNetText.textContent = 'OFFLINE (GELANGGANG LOCAL)';
+    }
+  }
+
+  // Best of 3 Round Wins Dots
+  ['1', '2', '3'].forEach((rd, idx) => {
+    const elB = document.getElementById(`chong-rd-${rd}`);
+    const elR = document.getElementById(`hong-rd-${rd}`);
+    if (elB) {
+      if (idx < (displayState.blueRoundWins || 0)) elB.classList.add('won');
+      else elB.classList.remove('won');
+    }
+    if (elR) {
+      if (idx < (displayState.redRoundWins || 0)) elR.classList.add('won');
+      else elR.classList.remove('won');
+    }
+  });
+
+  // Coach IVR Quota Status
+  const elBIvr = document.getElementById('chong-ivr-status');
+  if (elBIvr) {
+    elBIvr.textContent = displayState.blueIvrReady ? 'READY (1)' : 'USED (0)';
+    elBIvr.className = `ivr-status ${displayState.blueIvrReady ? 'ready' : 'used'}`;
+  }
+  const elRIvr = document.getElementById('hong-ivr-status');
+  if (elRIvr) {
+    elRIvr.textContent = displayState.redIvrReady ? 'READY (1)' : 'USED (0)';
+    elRIvr.className = `ivr-status ${displayState.redIvrReady ? 'ready' : 'used'}`;
+  }
+
+  // Technique Breakdown Stats
+  const sB = displayState.stats?.blue || { punch: 0, body: 0, head: 0 };
+  const sR = displayState.stats?.red || { punch: 0, body: 0, head: 0 };
+  const elBPunch = document.getElementById('chong-stat-punch');
+  const elBBody = document.getElementById('chong-stat-body');
+  const elBHead = document.getElementById('chong-stat-head');
+  if (elBPunch) elBPunch.textContent = sB.punch || 0;
+  if (elBBody) elBBody.textContent = sB.body || 0;
+  if (elBHead) elBHead.textContent = sB.head || 0;
+
+  const elRPunch = document.getElementById('hong-stat-punch');
+  const elRBody = document.getElementById('hong-stat-body');
+  const elRHead = document.getElementById('hong-stat-head');
+  if (elRPunch) elRPunch.textContent = sR.punch || 0;
+  if (elRBody) elRBody.textContent = sR.body || 0;
+  if (elRHead) elRHead.textContent = sR.head || 0;
+
+  // IVR Appeal Review Banner
+  const elIvrBanner = document.getElementById('ivr-review-banner');
+  const elIvrCorner = document.getElementById('ivr-review-corner-tag');
+  if (elIvrBanner) {
+    if (displayState.ivrReviewActive) {
+      elIvrBanner.classList.remove('hidden');
+      if (elIvrCorner) {
+        elIvrCorner.textContent = displayState.ivrReviewCorner === 'CHONG' ? 'SUDUT BIRU (CHONG) APPEAL' : 'SUDUT MERAH (HONG) APPEAL';
+      }
+    } else {
+      elIvrBanner.classList.add('hidden');
     }
   }
 }
@@ -505,11 +572,93 @@ document.addEventListener('DOMContentLoaded', () => {
     recordStreamPacket(`LOCAL_TEST: Deklarasi Juara ${winner}`, 'WINNER');
   });
 
+  document.getElementById('test-blue-punch')?.addEventListener('click', () => {
+    displayState.bluePoints += 1;
+    displayState.stats.blue.punch++;
+    updateDisplayUI();
+    playArenaSound('point');
+    showHitAlert('CHONG', '+1 PUKULAN');
+    recordStreamPacket('LOCAL_TEST: +1 Pukulan Chong', 'LOCAL_ACTION');
+    broadcastToOperator('STATE_SYNC', { payload: displayState });
+  });
+
+  document.getElementById('test-blue-head')?.addEventListener('click', () => {
+    displayState.bluePoints += 3;
+    displayState.stats.blue.head++;
+    updateDisplayUI();
+    playArenaSound('point');
+    showHitAlert('CHONG', '+3 TENDANGAN KEPALA');
+    recordStreamPacket('LOCAL_TEST: +3 Kepala Chong', 'LOCAL_ACTION');
+    broadcastToOperator('STATE_SYNC', { payload: displayState });
+  });
+
+  document.getElementById('test-red-punch')?.addEventListener('click', () => {
+    displayState.redPoints += 1;
+    displayState.stats.red.punch++;
+    updateDisplayUI();
+    playArenaSound('point');
+    showHitAlert('HONG', '+1 PUKULAN');
+    recordStreamPacket('LOCAL_TEST: +1 Pukulan Hong', 'LOCAL_ACTION');
+    broadcastToOperator('STATE_SYNC', { payload: displayState });
+  });
+
+  document.getElementById('test-red-head')?.addEventListener('click', () => {
+    displayState.redPoints += 3;
+    displayState.stats.red.head++;
+    updateDisplayUI();
+    playArenaSound('point');
+    showHitAlert('HONG', '+3 TENDANGAN KEPALA');
+    recordStreamPacket('LOCAL_TEST: +3 Kepala Hong', 'LOCAL_ACTION');
+    broadcastToOperator('STATE_SYNC', { payload: displayState });
+  });
+
+  document.getElementById('test-blue-round-win')?.addEventListener('click', () => {
+    displayState.blueRoundWins = Math.min(2, (displayState.blueRoundWins || 0) + 1);
+    updateDisplayUI();
+    playArenaSound('buzzer');
+    showHitAlert('CHONG', `🏆 CHONG MENANG RONDE ${displayState.round}!`);
+    recordStreamPacket(`LOCAL_TEST: Chong menang ronde (Total: ${displayState.blueRoundWins})`, 'ROUND_WIN');
+    if (displayState.blueRoundWins >= 2) {
+      setTimeout(() => showWinnerAnnouncement('CHONG'), 1200);
+    }
+  });
+
+  document.getElementById('test-red-round-win')?.addEventListener('click', () => {
+    displayState.redRoundWins = Math.min(2, (displayState.redRoundWins || 0) + 1);
+    updateDisplayUI();
+    playArenaSound('buzzer');
+    showHitAlert('HONG', `🏆 HONG MENANG RONDE ${displayState.round}!`);
+    recordStreamPacket(`LOCAL_TEST: Hong menang ronde (Total: ${displayState.redRoundWins})`, 'ROUND_WIN');
+    if (displayState.redRoundWins >= 2) {
+      setTimeout(() => showWinnerAnnouncement('HONG'), 1200);
+    }
+  });
+
+  document.getElementById('test-toggle-ivr')?.addEventListener('click', () => {
+    displayState.ivrReviewActive = !displayState.ivrReviewActive;
+    displayState.ivrReviewCorner = displayState.ivrReviewActive ? 'CHONG' : null;
+    if (displayState.ivrReviewActive) {
+      displayState.blueIvrReady = false; // Gunakan kuota kartu IVR
+    }
+    updateDisplayUI();
+    playArenaSound('buzzer');
+    recordStreamPacket(`LOCAL_TEST: IVR Review ${displayState.ivrReviewActive ? 'STARTED' : 'CONCLUDED'}`, 'IVR_EVENT');
+  });
+
   document.getElementById('test-reset-match')?.addEventListener('click', () => {
     displayState.bluePoints = 0;
     displayState.redPoints = 0;
     displayState.blueGamJeom = 0;
     displayState.redGamJeom = 0;
+    displayState.blueRoundWins = 0;
+    displayState.redRoundWins = 0;
+    displayState.blueIvrReady = true;
+    displayState.redIvrReady = true;
+    displayState.ivrReviewActive = false;
+    displayState.stats = {
+      blue: { punch: 0, body: 0, head: 0 },
+      red: { punch: 0, body: 0, head: 0 }
+    };
     displayState.round = 1;
     displayState.timerSeconds = 120;
     displayState.isTimerRunning = false;

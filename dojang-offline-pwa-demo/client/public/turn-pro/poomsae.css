@@ -1,0 +1,1056 @@
+/* ==========================================================================
+   Dojang Turn Pro - Poomsae Scoring Board (Operator Console Styling)
+   ========================================================================== */
+
+:root {
+  --bg-primary: #030712;
+  --bg-secondary: #0b1120;
+  --bg-card: #111827;
+  --bg-card-hover: #1f2937;
+  --border-color: #1f2937;
+  --border-subtle: #374151;
+
+  --chong-blue: #2563eb;
+  --chong-glow: rgba(37, 99, 235, 0.4);
+  --hong-red: #dc2626;
+  --hong-glow: rgba(220, 38, 38, 0.4);
+
+  --accent-gold: #f59e0b;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-purple: #8b5cf6;
+
+  --text-primary: #f9fafb;
+  --text-muted: #9ca3af;
+  --text-dim: #6b7280;
+
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   1. Arena Top Bar & Sub-Navigation
+   -------------------------------------------------------------------------- */
+.arena-header {
+  background: rgba(11, 17, 32, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.match-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.court-badge {
+  background: linear-gradient(135deg, #0d9488, #059669);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(13, 148, 136, 0.3);
+}
+
+.discipline-badge {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+}
+
+.category-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #f3f4f6;
+}
+
+.poomsae-tag {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.network-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.offline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
+}
+
+.offline-pill.is-offline {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.sync-badge {
+  background: #1e293b;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  font-family: var(--font-mono);
+}
+
+.sync-badge.has-pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+  font-weight: 700;
+  animation: pulseWarning 1.8s infinite;
+}
+
+@keyframes pulseWarning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.nav-links {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link.active-sub {
+  color: var(--accent-cyan);
+  font-weight: 700;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   2. Action Toolbar & Match Switcher
+   -------------------------------------------------------------------------- */
+.action-strip {
+  background: #090e1a;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  align-items: center;
+  scrollbar-width: thin;
+}
+
+.btn-ctrl {
+  background: #1e293b;
+  color: var(--text-primary);
+  border: 1px solid #334155;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn-ctrl:hover {
+  background: #334155;
+  border-color: #475569;
+  transform: translateY(-1px);
+}
+
+.btn-ctrl:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #0369a1;
+}
+
+.btn-gold {
+  background: #b45309;
+  border-color: #f59e0b;
+  color: #fff;
+}
+.btn-gold:hover {
+  background: #92400e;
+}
+
+.btn-danger {
+  background: #991b1b;
+  border-color: #ef4444;
+  color: #fff;
+}
+.btn-danger:hover {
+  background: #7f1d1d;
+}
+
+.select-match {
+  background: #1e293b;
+  color: #f3f4f6;
+  border: 1px solid #334155;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   3. Split Screen Simulator Panel
+   -------------------------------------------------------------------------- */
+.split-simulator-panel {
+  background: #050811;
+  border-bottom: 2px solid #3b82f6;
+  padding: 0.75rem 1.25rem;
+  animation: slideDown 0.3s ease;
+}
+
+.split-simulator-panel.hidden {
+  display: none;
+}
+
+.split-simulator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.split-simulator-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #60a5fa;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.split-iframe-container {
+  width: 100%;
+  height: 480px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
+}
+
+.split-iframe-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #030712;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------------------
+   4. Main Container & Battle Mode Layout
+   -------------------------------------------------------------------------- */
+.poomsae-main {
+  flex: 1;
+  padding: 1.25rem;
+  max-width: 1560px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Match Control Banner (Timer, Jurus, Mode Switcher) */
+.match-status-card {
+  background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.match-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.match-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.match-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Timer Widget */
+.timer-widget {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: rgba(3, 7, 18, 0.8);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 0.5rem 1.25rem;
+}
+
+.timer-digits {
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #10b981;
+  text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+  min-width: 130px;
+  text-align: center;
+}
+
+.timer-digits.warning {
+  color: var(--accent-gold);
+  text-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+}
+
+.timer-digits.critical {
+  color: #ef4444;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
+  animation: pulseBlink 0.8s infinite alternate;
+}
+
+@keyframes pulseBlink {
+  from { opacity: 1; }
+  to { opacity: 0.4; }
+}
+
+.timer-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-timer {
+  background: #10b981;
+  color: #000;
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-timer:hover {
+  background: #34d399;
+}
+
+.btn-timer.btn-pause {
+  background: var(--accent-gold);
+  color: #000;
+}
+
+.btn-timer-reset {
+  background: #374151;
+  color: #fff;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-timer-reset:hover {
+  background: #4b5563;
+}
+
+/* --------------------------------------------------------------------------
+   5. Head-to-Head Battle Corners Display
+   -------------------------------------------------------------------------- */
+.battle-corners-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+  .battle-corners-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.corner-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.corner-card.corner-blue {
+  border-color: rgba(37, 99, 235, 0.4);
+}
+.corner-card.corner-red {
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.corner-card.is-active-performer {
+  box-shadow: 0 0 30px var(--chong-glow);
+  border-color: #3b82f6;
+}
+.corner-card.corner-red.is-active-performer {
+  box-shadow: 0 0 30px var(--hong-glow);
+  border-color: #ef4444;
+}
+
+/* Performer Top Strip */
+.performer-header {
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.corner-blue .performer-header {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.35) 0%, rgba(30, 58, 138, 0.15) 100%);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.3);
+}
+
+.corner-red .performer-header {
+  background: linear-gradient(90deg, rgba(220, 38, 38, 0.35) 0%, rgba(153, 27, 27, 0.15) 100%);
+  border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.corner-tag {
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.corner-blue .corner-tag {
+  color: #60a5fa;
+}
+.corner-red .corner-tag {
+  color: #f87171;
+}
+
+.performer-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.performer-club {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.active-performer-badge {
+  background: #10b981;
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: none;
+}
+
+.is-active-performer .active-performer-badge {
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.96); }
+}
+
+/* Score Highlight Block */
+.corner-score-hero {
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.score-main-block {
+  text-align: center;
+}
+
+.score-main-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.score-main-num {
+  font-family: var(--font-mono);
+  font-size: 3.2rem;
+  font-weight: 900;
+  line-height: 1;
+  margin: 0.2rem 0;
+}
+
+.corner-blue .score-main-num {
+  color: #60a5fa;
+  text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+}
+
+.corner-red .score-main-num {
+  color: #f87171;
+  text-shadow: 0 0 20px rgba(248, 113, 113, 0.5);
+}
+
+.score-breakdown-sub {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.sub-score-item {
+  text-align: center;
+}
+
+.sub-score-item span:first-child {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.sub-score-item .sub-score-val {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+/* --------------------------------------------------------------------------
+   6. Judge Input Console (Pad Penilaian Juri WT)
+   -------------------------------------------------------------------------- */
+.judge-scoring-section {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  flex: 1;
+}
+
+.judge-tabs-strip {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+}
+
+.judge-tabs {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.btn-judge-tab {
+  background: #1e293b;
+  color: var(--text-muted);
+  border: 1px solid #334155;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-judge-tab:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.btn-judge-tab.active {
+  background: var(--accent-cyan);
+  color: #000;
+  border-color: #22d3ee;
+}
+
+/* Accuracy Pad (Ketepatan Teknik - Base 4.00) */
+.accuracy-card {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.card-title-row h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cbd5e1;
+}
+
+.accuracy-current-badge {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.deduction-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.btn-deduct {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f3f4f6;
+  padding: 0.85rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.btn-deduct:hover {
+  background: #374151;
+  border-color: #4b5563;
+  transform: translateY(-2px);
+}
+
+.btn-deduct:active {
+  transform: translateY(0);
+}
+
+.btn-deduct.btn-minor {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.btn-deduct.btn-minor:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.btn-deduct.btn-major {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+.btn-deduct.btn-major:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.deduct-val {
+  font-size: 1.35rem;
+  font-weight: 900;
+  font-family: var(--font-mono);
+}
+
+.deduct-val.minor { color: #fbbf24; }
+.deduct-val.major { color: #f87171; }
+
+.deduct-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.deduct-count-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  margin-top: 0.2rem;
+}
+
+/* Action Undo & Reset Accuracy */
+.accuracy-ctrls {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  justify-content: flex-end;
+}
+
+.btn-mini-ctrl {
+  background: transparent;
+  border: 1px solid #374151;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-mini-ctrl:hover {
+  background: #374151;
+  color: #fff;
+}
+
+/* Presentation Pad (Penyajian - Base 6.00) */
+.presentation-card {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.pres-criterion {
+  margin-bottom: 0.75rem;
+}
+
+.pres-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.pres-val-display {
+  font-family: var(--font-mono);
+  color: var(--accent-gold);
+  font-weight: 800;
+}
+
+.pres-slider {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  background: #334155;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.pres-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f59e0b;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  transition: transform 0.1s;
+}
+
+.pres-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Additional Deductions (Matras, Waktu, Restart) */
+.extra-penalties-card {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.penalty-checkboxes {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.penalty-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #f87171;
+  cursor: pointer;
+}
+
+.penalty-label input {
+  accent-color: #ef4444;
+  cursor: pointer;
+}
+
+/* Submit & Select Active Performer */
+.corner-footer-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn-set-active {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.corner-blue .btn-set-active:hover {
+  background: #2563eb;
+  border-color: #60a5fa;
+}
+
+.corner-red .btn-set-active:hover {
+  background: #dc2626;
+  border-color: #f87171;
+}
+
+.btn-confirm-score {
+  background: #059669;
+  border: 1px solid #10b981;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-confirm-score:hover {
+  background: #10b981;
+  color: #000;
+}
+
+/* --------------------------------------------------------------------------
+   7. WT Olympic 5-Judge Matrix & Trimmed Mean Table
+   -------------------------------------------------------------------------- */
+.judges-matrix-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  overflow-x: auto;
+}
+
+.judges-matrix-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.judges-matrix-title h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #e2e8f0;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.matrix-table th {
+  background: #1e293b;
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #334155;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.matrix-table td {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #1e293b;
+  font-family: var(--font-mono);
+}
+
+.matrix-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Trimmed marks (highest & lowest struck-through) */
+.is-trimmed {
+  color: #64748b;
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.is-counted {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.final-mean-row {
+  background: rgba(16, 185, 129, 0.1);
+  font-weight: 800;
+}
+.final-mean-row td {
+  color: #34d399;
+  border-top: 2px solid #10b981;
+}
+
+/* --------------------------------------------------------------------------
+   8. Winner Announcement Banner & Outbox Stream
+   -------------------------------------------------------------------------- */
+.winner-banner-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+
+.winner-banner-modal.hidden {
+  display: none;
+}
+
+.winner-dialog {
+  background: #111827;
+  border: 2px solid var(--accent-gold);
+  border-radius: 16px;
+  padding: 2.5rem;
+  max-width: 550px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(245, 158, 11, 0.3);
+}
+
+.winner-dialog h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+  color: var(--accent-gold);
+}
+
+.winner-athlete-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0.75rem 0;
+}
+
+.winner-details {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.telemetry-strip {
+  background: #090e1a;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

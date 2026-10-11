@@ -15,7 +15,10 @@
     </div>
     <nav>
       <a href="/" class="active">Core Home</a>
-      <a href="/turn-pro/">Turn Pro (Arena)</a>
+      <a href="/turn-pro/">Kyorugi Arena</a>
+      <a href="/turn-pro/kyorugi-display" target="_blank">📺 Kyorugi Display</a>
+      <a href="/turn-pro/poomsae">Poomsae Arena</a>
+      <a href="/turn-pro/poomsae-display" target="_blank">📺 Poomsae Display</a>
       <a href="/coach/">Coach</a>
       <a href="/member/">Member</a>
     </nav>
@@ -25,7 +28,7 @@
     <section class="hero">
       <h1>Satu Domain, Multi-Subpath Architecture</h1>
       <p>
-        Sistem manajemen terintegrasi dengan pemisahan subpath untuk Core Portal, Arena Pertandingan Offline-Ready (Turn Pro), Portal Pelatih, dan Portal Atlet.
+        Sistem manajemen terintegrasi dengan pemisahan subpath untuk Core Portal, Arena Pertandingan Offline-Ready (Turn Pro Kyorugi & Poomsae), Portal Pelatih, dan Portal Atlet.
       </p>
       <div class="status-badge">
         <span class="status-dot"></span>
@@ -75,12 +78,29 @@
       <div class="card">
         <div>
           <span class="card-tag tag-red">Subpath: /turn-pro/</span>
-          <h3>Dojang Turn Pro (Pertandingan)</h3>
+          <h3>Dojang Turn Pro (Kyorugi Battle)</h3>
           <p>
-            Scoreboard digital & manajemen gelanggang. Dilengkapi <strong>Offline Capability</strong>, Pre-caching aset audio/UI, Local-First IndexedDB, dan Outbox Queue Background Sync.
+            Scoreboard digital duel Kyorugi (Chong vs Hong) standar <strong>World Taekwondo</strong>. Dilengkapi Best of 3 Rounds, Coach IVR Quota, <strong>Offline Capability</strong>, dan Realtime P2P Display Monitor.
           </p>
         </div>
-        <a href="/turn-pro/" class="btn btn-turnpro">Buka Arena Turn Pro &rarr;</a>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+          <a href="/turn-pro/" class="btn btn-turnpro" style="flex: 1; text-align: center;">Buka Operator &rarr;</a>
+          <a href="/turn-pro/kyorugi-display" class="btn" style="background: #0d9488; text-align: center;" target="_blank">📺 Layar Display TV &rarr;</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div>
+          <span class="card-tag" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);">Subpath: /turn-pro/poomsae</span>
+          <h3>Dojang Turn Pro (Poomsae Seni)</h3>
+          <p>
+            Digital Scoring Board Seni Poomsae berstandar <strong>World Taekwondo (WT)</strong>. Dilengkapi Akurasi (Base 4.0), Presentasi (Base 6.0), kalkulasi <strong>Olympic Trimmed Mean 5 Juri</strong>, dan Display Videotron P2P.
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+          <a href="/turn-pro/poomsae" class="btn" style="background: #7c3aed; flex: 1; text-align: center;">Buka Wasit &rarr;</a>
+          <a href="/turn-pro/poomsae-display" class="btn" style="background: #b45309; text-align: center;" target="_blank">📺 Layar Display TV &rarr;</a>
+        </div>
       </div>
 
       <div class="card">

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Display Monitor Poomsae Gelanggang 1 - Dojang Turn Pro</title>
+  <link rel="stylesheet" href="/turn-pro/poomsae-display.css">
+  <link rel="manifest" href="/turn-pro/manifest.json">
+  <meta name="theme-color" content="#030712">
+</head>
+<body>
+
+  <!-- Stadium Top Banner -->
+  <header class="display-header">
+    <div class="header-left">
+      <span class="court-pill">GELANGGANG 1</span>
+      <span class="tournament-name">DOJANG CHAMPIONSHIP OPEN 2026</span>
+    </div>
+
+    <div class="match-category-banner" id="display-match-category">
+      FINAL BATTLE • <span>SENIOR PUTRA INDIVIDUAL RECOGNIZED POOMSAE</span>
+    </div>
+
+    <div class="header-right">
+      <div class="p2p-pill">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: currentColor;"></span>
+        <span>⚡ P2P LINK AKTIF (0ms)</span>
+      </div>
+      <button id="btn-toggle-test" class="btn-icon" title="Buka Kontrol Pengujian Standalone">🛠️ Test</button>
+      <button id="btn-sound-toggle" class="btn-icon" title="Toggle Suara Buzzer">🔊</button>
+      <button id="btn-fullscreen" class="btn-icon" title="Layar Penuh (HDMI / Videotron)">⛶ Layar Penuh</button>
+    </div>
+  </header>
+
+  <!-- Collapsible Standalone Quick Test Bar -->
+  <div id="quick-test-bar" class="quick-test-bar hidden">
+    <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700;">🛠️ Simulasi Display:</span>
+    <button class="btn-test" id="test-active-blue" style="background: #2563eb;">👉 Chong Tampil</button>
+    <button class="btn-test" id="test-active-red" style="background: #dc2626;">👉 Hong Tampil</button>
+    <button class="btn-test" id="test-timer-toggle" style="background: #059669;">▶ Mulai/Jeda Timer</button>
+    <button class="btn-test" id="test-declare-winner" style="background: #eab308; color: #000;">🏆 Pemenang</button>
+    <button class="btn-test" id="btn-close-test" style="background: #475569;">✕ Tutup</button>
+  </div>
+
+  <!-- Main Arena Display Layout -->
+  <main class="display-main">
+
+    <!-- Center Form & Timer Bar -->
+    <div class="center-meta-bar">
+      <div class="form-info-block">
+        <span class="form-label">JURUS POOMSAE:</span>
+        <span class="form-title" id="display-form-title">KORYO</span>
+      </div>
+
+      <div class="display-timer-box">
+        <span class="timer-status-tag" id="display-timer-tag">PAUSED</span>
+        <div class="timer-big-digits" id="display-timer-digits">01:30</div>
+      </div>
+    </div>
+
+    <!-- Split Corners (Chong vs Hong) -->
+    <div class="corners-display-grid">
+
+      <!-- SUDUT BIRU (CHONG) -->
+      <section id="disp-blue-card" class="display-corner-card corner-blue is-active-performer">
+        <div class="live-performer-strip">
+          <span>CHONG (SUDUT BIRU)</span>
+          <span class="performer-status-text" id="blue-status-text">SEDANG TAMPIL DI ARENA (LIVE)</span>
+        </div>
+
+        <div class="athlete-profile">
+          <div>
+            <div class="athlete-name" id="disp-blue-name">Muhammad Fadhil</div>
+            <div class="athlete-dojang" id="disp-blue-club">Garuda Taekwondo Club • Dan 2 Kukkiwon</div>
+          </div>
+          <span class="athlete-dan-tag">DAN 2</span>
+        </div>
+
+        <div class="score-hero-container">
+          <div class="big-total-block">
+            <div class="big-total-label">TOTAL SKOR AKHIR</div>
+            <div class="big-total-score" id="disp-blue-total">8.53</div>
+          </div>
+
+          <div class="secondary-breakdown">
+            <div class="score-pill-row">
+              <span class="pill-label">Akurasi (Acc)</span>
+              <span class="pill-num" id="disp-blue-acc">4.00</span>
+            </div>
+            <div class="score-pill-row">
+              <span class="pill-label">Presentasi (Pres)</span>
+              <span class="pill-num" id="disp-blue-pres">4.53</span>
+            </div>
+            <div class="score-pill-row">
+              <span class="pill-label">Penalti (Ded)</span>
+              <span class="pill-num" id="disp-blue-ded" style="color: #f87171;">-0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="judges-mini-bar">
+          <div class="judges-strip-title">
+            <span>RINCIAN 5 JURI WT (OLYMPIC TRIMMED-MEAN)</span>
+            <span style="font-size: 0.7rem; color: #64748b;">*Nilai tertinggi & terendah dieliminasi</span>
+          </div>
+          <div class="judge-chips-grid" id="disp-blue-judges">
+            <!-- Diisi dinamis -->
+          </div>
+        </div>
+      </section>
+
+      <!-- SUDUT MERAH (HONG) -->
+      <section id="disp-red-card" class="display-corner-card corner-red">
+        <div class="live-performer-strip">
+          <span>HONG (SUDUT MERAH)</span>
+          <span class="performer-status-text" id="red-status-text">MENUNGGU GILIRAN</span>
+        </div>
+
+        <div class="athlete-profile">
+          <div>
+            <div class="athlete-name" id="disp-red-name">Bagas Wicaksono</div>
+            <div class="athlete-dojang" id="disp-red-club">Elang Merah Academy • Dan 2 Kukkiwon</div>
+          </div>
+          <span class="athlete-dan-tag">DAN 2</span>
+        </div>
+
+        <div class="score-hero-container">
+          <div class="big-total-block">
+            <div class="big-total-label">TOTAL SKOR AKHIR</div>
+            <div class="big-total-score" id="disp-red-total">8.53</div>
+          </div>
+
+          <div class="secondary-breakdown">
+            <div class="score-pill-row">
+              <span class="pill-label">Akurasi (Acc)</span>
+              <span class="pill-num" id="disp-red-acc">4.00</span>
+            </div>
+            <div class="score-pill-row">
+              <span class="pill-label">Presentasi (Pres)</span>
+              <span class="pill-num" id="disp-red-pres">4.53</span>
+            </div>
+            <div class="score-pill-row">
+              <span class="pill-label">Penalti (Ded)</span>
+              <span class="pill-num" id="disp-red-ded" style="color: #f87171;">-0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="judges-mini-bar">
+          <div class="judges-strip-title">
+            <span>RINCIAN 5 JURI WT (OLYMPIC TRIMMED-MEAN)</span>
+            <span style="font-size: 0.7rem; color: #64748b;">*Nilai tertinggi & terendah dieliminasi</span>
+          </div>
+          <div class="judge-chips-grid" id="disp-red-judges">
+            <!-- Diisi dinamis -->
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Stadium Winner Celebration Overlay -->
+    <div id="winner-overlay" class="winner-celebration-overlay hidden">
+      <div class="winner-banner-badge" id="overlay-winner-badge">🏆 PEMENANG: CHONG (BIRU)</div>
+      <div class="winner-athlete-title" id="overlay-winner-name">Muhammad Fadhil</div>
+      <div class="winner-dojang-title" id="overlay-winner-dojang">Garuda Taekwondo Club</div>
+
+      <div class="winner-scores-comparison">
+        <div class="winner-side" style="color: #60a5fa;">
+          <div class="winner-side-tag">CHONG (BIRU)</div>
+          <div class="winner-side-score" id="overlay-blue-score">8.53</div>
+        </div>
+        <div style="font-size: 2rem; font-weight: 800; color: #64748b;">VS</div>
+        <div class="winner-side" style="color: #f87171;">
+          <div class="winner-side-tag">HONG (MERAH)</div>
+          <div class="winner-side-score" id="overlay-red-score">8.53</div>
+        </div>
+      </div>
+
+      <button id="btn-close-winner" class="btn-close-winner">
+        ✕ Tutup Layar Pemenang
+      </button>
+    </div>
+
+  </main>
+
+  <script src="/turn-pro/poomsae-display.js"></script>
+</body>
+</html>

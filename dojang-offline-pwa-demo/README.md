@@ -61,12 +61,18 @@ dojang-offline-pwa-demo/
 │       ├── core.js                        # Login logic & registrasi Core SW
 │       ├── turn-pro/                      # 🥋 Dojang Turn Pro (Arena Pertandingan)
 │       │   ├── sw.js                      # ⚠️ Dedicated SW Turn Pro (Scope: '/turn-pro/')
-│       │   ├── index.html                 # Scoreboard digital (Chong vs Hong) & Operator Console
-│       │   ├── turn-pro.css               # Tampilan LED scoreboard arena
+│       │   ├── index.html                 # Scoreboard digital Kyorugi (Chong vs Hong) & Operator Console
+│       │   ├── turn-pro.css               # Tampilan LED scoreboard arena Kyorugi
 │       │   ├── turn-pro.js                # IndexedDB engine, sound synth, outbox sync, P2P channel
-│       │   ├── display.html               # 📺 Layar Display Gelanggang (TV / Videotron Arena)
-│       │   ├── display.css                # Styling stadium LED arena display
-│       │   ├── display.js                 # Engine display penerima stream BroadcastChannel
+│       │   ├── display.html               # 📺 Layar Display Gelanggang Kyorugi (TV / Videotron Arena)
+│       │   ├── display.css                # Styling stadium LED arena display Kyorugi
+│       │   ├── display.js                 # Engine display penerima stream BroadcastChannel Kyorugi
+│       │   ├── poomsae.html               # 📜 Scoreboard Digital Poomsae (Console Operator & Wasit WT)
+│       │   ├── poomsae.css                # Styling arena & pad juri scoring Poomsae
+│       │   ├── poomsae.js                 # Engine Poomsae (Olympic Trimmed Mean 5 Juri, Audio Synth)
+│       │   ├── poomsae-display.html       # 📺 Layar Display Gelanggang Poomsae (TV / Videotron Arena)
+│       │   ├── poomsae-display.css        # Styling widescreen videotron display Poomsae
+│       │   ├── poomsae-display.js         # Engine display Poomsae penerima stream P2P
 │       │   └── manifest.json              # PWA manifest Turn Pro
 │       ├── coach/                         # 🥋 Dojang Coach
 │       │   ├── index.html                 # Dashboard pelatih binaan
@@ -491,14 +497,37 @@ Server akan aktif di `http://localhost:3000`.
    * Sistem mendeteksi koneksi pulih dan langsung mengeksekusi sinkronisasi outbox ke server.
    * Status antrean berubah menjadi **✓ Tersinkronisasi** secara otomatis!
 
-5. **Uji Coba Layar Display Monitor (TV / Proyektor Arena):**
-   * Klik tombol toska: **"📺 Buka Display Monitor Gelanggang"** (terbuka di tab/window terpisah) atau tombol ungu: **"🪟 Simulasi Split-Screen"** untuk melihat preview di halaman yang sama.
-   * Coba tekan tombol poin di konsol operator: Perhatikan layar display monitor langsung terupdate seketika (*zero delay*), suara beep berbunyi, dan muncul notifikasi *hit banner*!
-   * Klik **"🏆 Deklarasi Pemenang"** untuk memicu layar kemenangan resmi (*Winner Overlay*).
+5. **Uji Coba Layar Kyorugi / Battle Display (TV / Videotron Arena):**
+   * Buka URL: `http://localhost:3000/turn-pro/kyorugi-display` (alias `/turn-pro/battle-display` atau `/turn-pro/display`).
+   * Dapat juga diakses via tombol toska: **"📺 Buka Display Monitor Gelanggang"** di konsol operator atau tombol ungu: **"🪟 Simulasi Split-Screen"**.
+   * **Fitur Modern Standar World Taekwondo Kyorugi**:
+     * **Indikator Ronde Menang (Best-of-3 Format)**: Titik kemenangan ronde per sudut (R1, R2, R3) yang aktif seketika.
+     * **Coach IVR Quota (Instant Video Replay)**: Menampilkan ketersediaan kartu banding video pelatih (*Ready 1 / Used 0*).
+     * **Live IVR Appeal Banner**: Animasi spanduk peringatan saat video replay sedang ditinjau oleh juri.
+     * **Statistik Teknik Serangan**: Rincian jumlah pukulan (+1), tendangan badan (+2), dan tendangan kepala (+3).
+     * **Simulasi Display Standalone**: Buka kontrol pengujian langsung dari layar display via tombol **"🛠️ Test"** untuk simulasi tendangan, gam-jeom, round win, maupun appeal IVR.
+     * Klik **"🏆 Juara Partai"** untuk memicu layar kemenangan resmi (*Winner Overlay Modal*).
 
 6. **Uji Coba Telemetri Stream Data & Burst Test:**
    * Klik tombol oranye: **"⚡ Burst Test (5 Stream Data Sekaligus)"**.
    * Amati terminal **Telemetri Stream Data** di bagian bawah konsol: Anda dapat melihat paket data yang dipancarkan secara lokal (`tag-p2p`), antrean lokal (`tag-outbox`), serta respons server (`tag-cloud-ack`).
+
+7. **Uji Coba Scoring Board Poomsae (Seni Bela Diri Standar WT):**
+   * Buka URL: `http://localhost:3000/turn-pro/poomsae` (atau klik tombol **"📜 Poomsae"** di navigasi).
+   * **Fitur Utama Poomsae Scoring Engine**:
+     * **Standar Regulasi World Taekwondo (WT)**:
+       * **Akurasi (Accuracy)**: Base score `4.00`. Tombol deduksi `-0.1` (Minor Fault) dan `-0.3` (Major Fault) dengan counter dan kalkulasi realtime.
+       * **Presentasi (Presentation)**: Base score `6.00`. Slider penilaian untuk *Speed & Power* (0.0 - 2.0), *Rhythm & Tempo* (0.0 - 2.0), dan *Expression of Energy* (0.0 - 2.0).
+       * **Penalti Tambahan**: Checkbox untuk Overtime >90s (-0.3), Keluar Matras (-0.3), dan Restart Jurus (-0.6).
+     * **Sistem Multi-Juri (Olympic Trimmed Mean 5 Juri)**:
+       * Masing-masing dari 5 juri (J1 s/d J5) dapat dinilai secara independen.
+       * Algoritma secara otomatis mengeliminasi nilai **tertinggi (Highest)** dan **terendah (Lowest)** pada aspek Akurasi dan Presentasi (ditandai dengan efek coret/trim visual), lalu menghitung rata-rata dari 3 nilai juri tengah.
+     * **Layar Display Monitor Poomsae**:
+       * Buka `http://localhost:3000/turn-pro/poomsae-display` atau klik tombol **"🪟 Split-Screen Simulator"**.
+       * Layar videotron widescreen menampilkan status live penampil (*Chong vs Hong*), timer hitung mundur 90 detik, LED score raksasa, serta rincian 5 kartu nilai juri.
+       * Klik tombol **"⚡ Simulasi Skor Juri"** untuk mengisi skor 5 juri secara otomatis, dan klik **"🏆 Umumkan Pemenang"** untuk memicu layar selebrasi pemenang dengan audio fanfare!
+     * **P2P Local-First Offline**:
+       * Beroperasi 100% offline via BroadcastChannel `dojang_poomsae_channel` (0ms latency antar monitor).
 
 ---
 
@@ -512,6 +541,6 @@ Untuk memastikan arsitektur berjalan sesuai standar browser:
    * Di `/turn-pro/`, Anda melihat worker aktif: `/turn-pro/sw.js` (Scope `/turn-pro/`).
 3. **Storage -> IndexedDB:**
    * Buka database `DojangTurnProDB`.
-   * Buka object store `outbox` untuk melihat seluruh rekaman transaksi poin pertandingan yang disimpan secara lokal.
+   * Buka object store `poomsaeMatches` & `outbox` untuk melihat seluruh rekaman transaksi poin dan jurus pertandingan yang disimpan secara lokal.
 4. **Cache Storage:**
-   * Buka `turn-pro-v2` untuk memverifikasi file HTML, CSS, JS arena pertandingan dan display monitor telah di-cache.
+   * Buka `turn-pro-v3` untuk memverifikasi seluruh file HTML, CSS, JS Kyorugi dan Poomsae telah di-cache.

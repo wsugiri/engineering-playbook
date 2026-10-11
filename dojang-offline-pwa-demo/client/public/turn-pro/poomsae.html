@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dojang Turn Pro - Poomsae Scoring Board & Operator Console</title>
+  <link rel="stylesheet" href="/turn-pro/poomsae.css">
+  <link rel="manifest" href="/turn-pro/manifest.json">
+  <meta name="theme-color" content="#7c3aed">
+</head>
+<body>
+
+  <!-- Arena Top Bar -->
+  <header class="arena-header">
+    <div class="match-info">
+      <span class="court-badge">GELANGGANG 1</span>
+      <span class="discipline-badge">POOMSAE WT</span>
+      <span class="category-name" id="match-category-title">Final Battle: Senior Putra Individual Recognized Poomsae</span>
+      <span class="poomsae-tag" id="current-poomsae-tag">Koryo</span>
+    </div>
+
+    <div class="network-controls">
+      <div id="offline-status" class="offline-pill">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: currentColor;"></span>
+        <span id="offline-text">TERHUBUNG (ONLINE)</span>
+      </div>
+      <div id="pending-count" class="sync-badge">0 Event Antrean Offline</div>
+      <div class="nav-links">
+        <a href="/turn-pro/" class="nav-link">🥋 Kyorugi (Tarung)</a>
+        <a href="/turn-pro/poomsae" class="nav-link active-sub">📜 Poomsae (Seni)</a>
+        <a href="/" class="nav-link">&larr; Core</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Action Toolbar -->
+  <div class="action-strip">
+    <select id="select-match" class="select-match" title="Pilih Partai Pertandingan Poomsae">
+      <option value="PM-201">Partai #201: Senior Putra (Fadhil vs Bagas) - Koryo</option>
+      <option value="PM-202">Partai #202: Senior Putri (Annisa vs Siti) - Keumgang</option>
+    </select>
+
+    <select id="select-poomsae" class="select-match" title="Pilih Jurus Poomsae">
+      <option value="Taegeuk 1 Jang">Taegeuk 1 Jang</option>
+      <option value="Taegeuk 2 Jang">Taegeuk 2 Jang</option>
+      <option value="Taegeuk 3 Jang">Taegeuk 3 Jang</option>
+      <option value="Taegeuk 4 Jang">Taegeuk 4 Jang</option>
+      <option value="Taegeuk 5 Jang">Taegeuk 5 Jang</option>
+      <option value="Taegeuk 6 Jang">Taegeuk 6 Jang</option>
+      <option value="Taegeuk 7 Jang">Taegeuk 7 Jang</option>
+      <option value="Taegeuk 8 Jang">Taegeuk 8 Jang</option>
+      <option value="Koryo" selected>Koryo</option>
+      <option value="Keumgang">Keumgang</option>
+      <option value="Taebaek">Taebaek</option>
+      <option value="Pyongwon">Pyongwon</option>
+      <option value="Shipjin">Shipjin</option>
+      <option value="Jitae">Jitae</option>
+      <option value="Cheonkwon">Cheonkwon</option>
+      <option value="Hansu">Hansu</option>
+      <option value="Ilyo">Ilyo</option>
+    </select>
+
+    <button id="btn-simulate-scores" class="btn-ctrl btn-gold" title="Simulasikan penilaian 5 juri otomatis">
+      ⚡ Simulasi Skor Juri
+    </button>
+    <button id="btn-declare-winner" class="btn-ctrl" style="background: #eab308; color: #000; font-weight: 800;">
+      🏆 Umumkan Pemenang
+    </button>
+    <button id="btn-open-display" class="btn-ctrl btn-primary">
+      📺 Buka Display Monitor (TV / Proyektor)
+    </button>
+    <button id="btn-toggle-split" class="btn-ctrl" style="background: #4338ca; border-color: #6366f1;">
+      🪟 Split-Screen Simulator
+    </button>
+    <button id="btn-sound-test" class="btn-ctrl">
+      📢 Tes Buzzer
+    </button>
+    <button id="btn-simulate-offline" class="btn-ctrl btn-danger">
+      🔌 Simulasikan Putus Sinyal (Offline)
+    </button>
+    <button id="btn-manual-sync" class="btn-ctrl">
+      🔄 Sync Outbox
+    </button>
+  </div>
+
+  <!-- Split Screen Simulator Preview Panel -->
+  <section id="split-simulator-panel" class="split-simulator-panel hidden">
+    <div class="split-simulator-header">
+      <div class="split-simulator-title">
+        <span>📺 PREVIEW LAYAR DISPLAY GELANGGANG POOMSAE (P2P REALTIME STREAM)</span>
+        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: normal;">*BroadcastChannel P2P lokal 0ms latency, 100% offline ready.</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="btn-refresh-split" class="btn-ctrl" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">🔄 Muat Ulang</button>
+        <button id="btn-close-split" class="btn-ctrl" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: #ef4444;">✕ Tutup</button>
+      </div>
+    </div>
+    <div class="split-iframe-container">
+      <iframe id="split-iframe" src="/turn-pro/poomsae-display.html" title="Poomsae Display Arena"></iframe>
+    </div>
+  </section>
+
+  <!-- Main Container -->
+  <main class="poomsae-main">
+
+    <!-- Match Status & Timer Banner -->
+    <section class="match-status-card">
+      <div class="match-header-left">
+        <div class="match-title">
+          <span>🥋 BATTLE POOMSAE (HEAD-TO-HEAD)</span>
+          <span style="font-size: 0.85rem; font-weight: 500; color: #9ca3af;">Aturan Standar World Taekwondo (Olympic Trimmed Mean 5 Juri)</span>
+        </div>
+        <div class="match-subtitle">
+          Klik tombol <strong>"Pilih Sebagai Penampil Aktif"</strong> pada sudut yang sedang tampil di arena, lalu gunakan tombol Akurasi & Presentasi di bawah.
+        </div>
+      </div>
+
+      <!-- Live Match Timer 90s -->
+      <div class="timer-widget">
+        <div class="timer-digits" id="timer-digits">01:30</div>
+        <div class="timer-actions">
+          <button id="btn-timer-toggle" class="btn-timer">▶ Mulai Tampil (90s)</button>
+          <button id="btn-timer-reset-90" class="btn-timer-reset" title="Reset ke 90 detik">↺ 90s</button>
+          <button id="btn-timer-reset-60" class="btn-timer-reset" title="Reset ke 60 detik">↺ 60s</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Battle Corners (Chong vs Hong) -->
+    <div class="battle-corners-grid">
+
+      <!-- SUDUT BIRU (CHONG) -->
+      <div id="card-blue-corner" class="corner-card corner-blue is-active-performer">
+        <div class="performer-header">
+          <div>
+            <div class="corner-tag">CHONG (SUDUT BIRU)</div>
+            <div class="performer-name" id="blue-performer-name">Muhammad Fadhil</div>
+            <div class="performer-club" id="blue-performer-club">Garuda Taekwondo Club • Dan 2 Kukkiwon</div>
+          </div>
+          <span class="active-performer-badge">SEDANG TAMPIL</span>
+        </div>
+
+        <div class="corner-score-hero">
+          <div class="score-main-block">
+            <div class="score-main-label">TOTAL SKOR AKHIR</div>
+            <div class="score-main-num" id="blue-total-score">8.53</div>
+          </div>
+          <div class="score-breakdown-sub">
+            <div class="sub-score-item">
+              <span>Akurasi (Max 4.0)</span>
+              <div class="sub-score-val" id="blue-acc-score">4.00</div>
+            </div>
+            <div class="sub-score-item">
+              <span>Presentasi (Max 6.0)</span>
+              <div class="sub-score-val" id="blue-pres-score">4.53</div>
+            </div>
+            <div class="sub-score-item">
+              <span>Penalti</span>
+              <div class="sub-score-val" id="blue-ded-score" style="color: #f87171;">-0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="corner-footer-actions" style="padding: 0.75rem 1.25rem;">
+          <button id="btn-select-blue" class="btn-set-active">
+            👉 Pilih Sudut Biru Sebagai Penampil Aktif
+          </button>
+        </div>
+      </div>
+
+      <!-- SUDUT MERAH (HONG) -->
+      <div id="card-red-corner" class="corner-card corner-red">
+        <div class="performer-header">
+          <div>
+            <div class="corner-tag">HONG (SUDUT MERAH)</div>
+            <div class="performer-name" id="red-performer-name">Bagas Wicaksono</div>
+            <div class="performer-club" id="red-performer-club">Elang Merah Academy • Dan 2 Kukkiwon</div>
+          </div>
+          <span class="active-performer-badge">SEDANG TAMPIL</span>
+        </div>
+
+        <div class="corner-score-hero">
+          <div class="score-main-block">
+            <div class="score-main-label">TOTAL SKOR AKHIR</div>
+            <div class="score-main-num" id="red-total-score">8.53</div>
+          </div>
+          <div class="score-breakdown-sub">
+            <div class="sub-score-item">
+              <span>Akurasi (Max 4.0)</span>
+              <div class="sub-score-val" id="red-acc-score">4.00</div>
+            </div>
+            <div class="sub-score-item">
+              <span>Presentasi (Max 6.0)</span>
+              <div class="sub-score-val" id="red-pres-score">4.53</div>
+            </div>
+            <div class="sub-score-item">
+              <span>Penalti</span>
+              <div class="sub-score-val" id="red-ded-score" style="color: #f87171;">-0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="corner-footer-actions" style="padding: 0.75rem 1.25rem;">
+          <button id="btn-select-red" class="btn-set-active">
+            👉 Pilih Sudut Merah Sebagai Penampil Aktif
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Active Judge Scoring Console (Pad Penilaian Juri Sesuai Penampil Aktif) -->
+    <section class="judge-scoring-section" style="border-radius: 14px; border: 1px solid var(--border-color);">
+      
+      <div class="judge-tabs-strip">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-cyan);">
+            INPUT NILAI JURI WT:
+          </span>
+          <div class="judge-tabs">
+            <button class="btn-judge-tab active" data-judge-id="1">Juri 1</button>
+            <button class="btn-judge-tab" data-judge-id="2">Juri 2</button>
+            <button class="btn-judge-tab" data-judge-id="3">Juri 3</button>
+            <button class="btn-judge-tab" data-judge-id="4">Juri 4</button>
+            <button class="btn-judge-tab" data-judge-id="5">Juri 5</button>
+          </div>
+        </div>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">
+          *Setiap juri memiliki input akurasi & presentasi tersendiri.
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        
+        <!-- Accuracy Pad (Ketepatan Teknik - Base 4.00) -->
+        <div class="accuracy-card">
+          <div class="card-title-row">
+            <h4>1. Akurasi (Accuracy) • Base 4.00</h4>
+            <div class="accuracy-current-badge" id="active-acc-badge">4.00</div>
+          </div>
+
+          <div class="deduction-buttons-grid">
+            <button id="btn-deduct-minor" class="btn-deduct btn-minor">
+              <span class="deduct-val minor">-0.1</span>
+              <span class="deduct-desc">Minor Fault (Kesalahan Kecil)</span>
+              <span class="deduct-count-pill" id="active-minor-count">0x (-0.0)</span>
+            </button>
+
+            <button id="btn-deduct-major" class="btn-deduct btn-major">
+              <span class="deduct-val major">-0.3</span>
+              <span class="deduct-desc">Major Fault (Kesalahan Besar)</span>
+              <span class="deduct-count-pill" id="active-major-count">0x (-0.0)</span>
+            </button>
+          </div>
+
+          <div class="accuracy-ctrls">
+            <button id="btn-undo-minor" class="btn-mini-ctrl">↩ Undo -0.1</button>
+            <button id="btn-undo-major" class="btn-mini-ctrl">↩ Undo -0.3</button>
+            <button id="btn-reset-accuracy" class="btn-mini-ctrl" style="color: #f87171;">↺ Reset Akurasi</button>
+          </div>
+        </div>
+
+        <!-- Presentation Pad (Penyajian - Base 6.00) -->
+        <div class="presentation-card">
+          <div class="card-title-row">
+            <h4>2. Presentasi (Presentation) • Base 6.00</h4>
+          </div>
+
+          <!-- Speed & Power -->
+          <div class="pres-criterion">
+            <div class="pres-label-row">
+              <span>Kecepatan & Kekuatan (Speed & Power • Max 2.0)</span>
+              <span class="pres-val-display" id="val-speed">1.50</span>
+            </div>
+            <input type="range" id="slider-speed" class="pres-slider" min="0.0" max="2.0" step="0.1" value="1.5">
+          </div>
+
+          <!-- Rhythm & Tempo -->
+          <div class="pres-criterion">
+            <div class="pres-label-row">
+              <span>Irama & Tempo Gerakan (Rhythm & Tempo • Max 2.0)</span>
+              <span class="pres-val-display" id="val-rhythm">1.50</span>
+            </div>
+            <input type="range" id="slider-rhythm" class="pres-slider" min="0.0" max="2.0" step="0.1" value="1.5">
+          </div>
+
+          <!-- Expression of Energy -->
+          <div class="pres-criterion">
+            <div class="pres-label-row">
+              <span>Pancaran Tenaga & Keseimbangan (Expression of Energy • Max 2.0)</span>
+              <span class="pres-val-display" id="val-energy">1.50</span>
+            </div>
+            <input type="range" id="slider-energy" class="pres-slider" min="0.0" max="2.0" step="0.1" value="1.5">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Extra Penalties & Deductions -->
+      <div class="extra-penalties-card">
+        <div style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.4rem; text-transform: uppercase;">
+          3. Penalti Tambahan (General Deductions):
+        </div>
+        <div class="penalty-checkboxes">
+          <label class="penalty-label">
+            <input type="checkbox" id="chk-overtime">
+            Overtime / Melebihi Waktu 90 Detik (-0.3)
+          </label>
+          <label class="penalty-label">
+            <input type="checkbox" id="chk-bound">
+            Keluar Garis Matras Pertandingan (-0.3)
+          </label>
+          <label class="penalty-label">
+            <input type="checkbox" id="chk-restart">
+            Restart / Mengulang Jurus (-0.6)
+          </label>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Olympic 5-Judge Matrix & Trimmed Mean Table -->
+    <section class="judges-matrix-card">
+      <div class="judges-matrix-title">
+        <div>
+          <h3>📊 Rekap Matrix 5 Juri (Olympic Trimmed-Mean World Taekwondo)</h3>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Nilai tertinggi dan terendah pada Akurasi & Presentasi dieliminasi secara otomatis (dicoret), dan 3 nilai tengah dirata-rata.
+          </p>
+        </div>
+      </div>
+
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Juri</th>
+            <th>Minor (-0.1)</th>
+            <th>Major (-0.3)</th>
+            <th>Akurasi (Max 4.0)</th>
+            <th>Speed/Power</th>
+            <th>Rhythm</th>
+            <th>Energy</th>
+            <th>Presentasi (Max 6.0)</th>
+            <th>Total Juri</th>
+          </tr>
+        </thead>
+        <tbody id="judges-matrix-body">
+          <!-- Diisi dinamis oleh poomsae.js -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Telemetry Strip -->
+    <div class="telemetry-strip">
+      <span>📡 P2P Stream Channel: <strong>dojang_poomsae_channel</strong> (0ms latency local)</span>
+      <span>💾 IndexedDB: <strong>DojangTurnProDB</strong> • Service Worker Scope: <strong>/turn-pro/</strong></span>
+    </div>
+
+  </main>
+
+  <!-- Winner Announcement Modal -->
+  <div id="winner-modal" class="winner-banner-modal hidden">
+    <div class="winner-dialog">
+      <h2 id="modal-winner-title">🏆 PEMENANG: CHONG (BIRU)</h2>
+      <div class="winner-athlete-name" id="modal-winner-athlete">Muhammad Fadhil</div>
+      <div class="winner-details" id="modal-winner-details">Garuda Taekwondo Club</div>
+      <button id="btn-close-winner-modal" class="btn-ctrl btn-gold" style="padding: 0.75rem 2rem; font-size: 1rem;">
+        ✕ Tutup Banner
+      </button>
+    </div>
+  </div>
+
+  <script src="/turn-pro/poomsae.js"></script>
+</body>
+</html>

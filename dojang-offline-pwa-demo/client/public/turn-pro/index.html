@@ -24,12 +24,19 @@
         <span id="offline-text">TERHUBUNG (ONLINE)</span>
       </div>
       <div id="pending-count" class="sync-badge">0 Event Antrean Offline</div>
-      <a href="/" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem;">&larr; Kembali ke Core</a>
+      <div style="display: flex; gap: 0.4rem; align-items: center;">
+        <a href="/turn-pro/" style="color: #60a5fa; text-decoration: none; font-size: 0.8rem; font-weight: 700; background: rgba(37,99,235,0.2); padding: 0.25rem 0.55rem; border-radius: 5px; border: 1px solid rgba(37,99,235,0.4);">🥋 Kyorugi</a>
+        <a href="/turn-pro/poomsae" style="color: #c084fc; text-decoration: none; font-size: 0.8rem; font-weight: 700; background: rgba(168,85,247,0.15); padding: 0.25rem 0.55rem; border-radius: 5px; border: 1px solid rgba(168,85,247,0.3);">📜 Poomsae</a>
+        <a href="/" style="color: #94a3b8; text-decoration: none; font-size: 0.8rem; margin-left: 0.25rem;">&larr; Core</a>
+      </div>
     </div>
   </header>
 
   <!-- Action Strip -->
   <div class="action-strip">
+    <a href="/turn-pro/poomsae" class="btn-ctrl" style="background: #6d28d9; border-color: #8b5cf6; text-decoration: none; color: #fff;">
+      📜 Buka Scoring Poomsae
+    </a>
     <button id="btn-download-data" class="btn-ctrl btn-primary">
       📥 Unduh Data Gelanggang (Pre-Cache ke IndexedDB)
     </button>

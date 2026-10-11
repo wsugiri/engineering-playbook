@@ -791,3 +791,171 @@ body {
   color: #e2e8f0;
 }
 
+/* ==========================================================================
+   KYORUGI BATTLE ENHANCEMENTS: Round Wins, Coach IVR, Technique Breakdown
+   ========================================================================== */
+
+/* Round Wins Best of 3 */
+.round-wins-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.5rem;
+}
+
+.round-wins-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.round-wins-dots {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.round-dot {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  background: #1e293b;
+  color: #64748b;
+  border: 1px solid #334155;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.corner-chong .round-dot.won {
+  background: #2563eb;
+  color: #fff;
+  border-color: #60a5fa;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.7);
+}
+
+.corner-hong .round-dot.won {
+  background: #dc2626;
+  color: #fff;
+  border-color: #f87171;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.7);
+}
+
+/* Coach IVR Video Replay Card */
+.ivr-quota-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.ivr-label {
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.ivr-status {
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+
+.ivr-status.ready {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.ivr-status.used {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  text-decoration: line-through;
+}
+
+/* Technique Breakdown Mini Bar */
+.technique-pills-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.tech-pill {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 0.25rem 0.4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tech-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.tech-val {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #cbd5e1;
+}
+
+/* Instant Video Replay Alert Banner */
+.ivr-review-banner {
+  background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 100%);
+  color: #fff;
+  padding: 0.65rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(124, 58, 237, 0.6);
+  border-bottom: 2px solid #a78bfa;
+  animation: pulseGlow 1.5s infinite alternate;
+  z-index: 40;
+}
+
+.ivr-review-banner.hidden {
+  display: none;
+}
+
+.ivr-review-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.ivr-review-title {
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ivr-review-corner {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes pulseGlow {
+  from { opacity: 0.95; }
+  to { opacity: 1; box-shadow: 0 0 35px rgba(167, 139, 250, 0.9); }
+}
+

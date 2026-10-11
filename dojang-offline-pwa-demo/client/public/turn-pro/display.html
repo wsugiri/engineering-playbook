@@ -28,6 +28,7 @@
         <span class="p2p-dot"></span>
         <span id="channel-text">⚡ P2P LINK AKTIF (0ms)</span>
       </div>
+      <a href="/turn-pro/poomsae-display" class="btn-icon" style="text-decoration: none; color: #c084fc; border-color: rgba(168,85,247,0.4);" title="Pindah ke Display Monitor Poomsae">📜 Poomsae</a>
       <button id="btn-toggle-test" class="btn-icon" title="Buka Kontrol Test Simulasi">🛠️ Test</button>
       <button id="btn-toggle-inspector" class="btn-icon" title="Buka Stream Telemetry Log">📡 Stream Log</button>
       <button id="btn-sound-toggle" class="btn-icon" title="Toggle Suara Buzzer">🔊</button>
@@ -40,13 +41,29 @@
     <div class="test-bar-inner">
       <span class="test-bar-title">🛠️ Simulasi Langsung Display:</span>
       <button class="btn-test btn-test-blue" id="test-blue-point">+2 Tendangan Chong</button>
+      <button class="btn-test btn-test-blue" id="test-blue-punch">+1 Pukulan Chong</button>
+      <button class="btn-test btn-test-blue" id="test-blue-head">+3 Kepala Chong</button>
       <button class="btn-test btn-test-blue" id="test-blue-gamjeom">+1 Gam-jeom Chong</button>
       <button class="btn-test btn-test-timer" id="test-timer-toggle">▶ Mulai / Jeda Timer</button>
       <button class="btn-test btn-test-red" id="test-red-point">+2 Tendangan Hong</button>
+      <button class="btn-test btn-test-red" id="test-red-punch">+1 Pukulan Hong</button>
+      <button class="btn-test btn-test-red" id="test-red-head">+3 Kepala Hong</button>
       <button class="btn-test btn-test-red" id="test-red-gamjeom">+1 Gam-jeom Hong</button>
-      <button class="btn-test" id="test-declare-winner" style="background: #eab308; color: #000;">🏆 Pemenang</button>
+      <button class="btn-test" id="test-blue-round-win" style="background: #2563eb;">🏆 Win R Chong</button>
+      <button class="btn-test" id="test-red-round-win" style="background: #dc2626;">🏆 Win R Hong</button>
+      <button class="btn-test" id="test-toggle-ivr" style="background: #7c3aed;">📹 Review IVR</button>
+      <button class="btn-test" id="test-declare-winner" style="background: #eab308; color: #000;">🏆 Juara Partai</button>
       <button class="btn-test" id="test-reset-match" style="background: #475569;">↺ Reset</button>
       <button id="btn-close-test-bar" class="btn-test" style="background: #dc2626;">✕ Tutup</button>
+    </div>
+  </div>
+
+  <!-- Instant Video Replay Alert Banner -->
+  <div id="ivr-review-banner" class="ivr-review-banner hidden">
+    <div class="ivr-review-content">
+      <span style="font-size: 1.3rem;">📹 🔍</span>
+      <span class="ivr-review-title">INSTANT VIDEO REPLAY (IVR) APPEAL REVIEW IN PROGRESS</span>
+      <span class="ivr-review-corner" id="ivr-review-corner-tag">SUDUT BIRU (CHONG) APPEAL</span>
     </div>
   </div>
 
@@ -64,13 +81,46 @@
     <!-- SUDUT BIRU (CHONG) -->
     <section class="stadium-corner corner-chong" id="corner-chong-card">
       <div class="corner-header">
-        <div class="corner-label">CHONG 靑</div>
+        <div class="corner-label">CHONG 靑 (SUDUT BIRU)</div>
         <div class="fighter-name" id="chong-name">Ahmad Rayhan</div>
         <div class="fighter-club" id="chong-club">Garuda Taekwondo Club</div>
+
+        <!-- Best-of-3 Round Wins Indicator -->
+        <div class="round-wins-bar">
+          <span class="round-wins-label">RONDE MENANG (BEST OF 3):</span>
+          <div class="round-wins-dots" id="chong-round-dots">
+            <span class="round-dot" id="chong-rd-1">R1</span>
+            <span class="round-dot" id="chong-rd-2">R2</span>
+            <span class="round-dot" id="chong-rd-3">R3</span>
+          </div>
+        </div>
       </div>
 
       <div class="score-wrapper">
         <div class="led-score" id="chong-score">0</div>
+      </div>
+
+      <!-- Coach IVR Quota & Technique Breakdown -->
+      <div style="padding: 0 1.25rem;">
+        <div class="ivr-quota-card" id="chong-ivr-card">
+          <span class="ivr-label">📹 COACH IVR QUOTA:</span>
+          <span class="ivr-status ready" id="chong-ivr-status">READY (1)</span>
+        </div>
+
+        <div class="technique-pills-row">
+          <div class="tech-pill" title="Pukulan (+1)">
+            <span class="tech-tag">PUKULAN</span>
+            <span class="tech-val" id="chong-stat-punch">0</span>
+          </div>
+          <div class="tech-pill" title="Badan (+2)">
+            <span class="tech-tag">BADAN</span>
+            <span class="tech-val" id="chong-stat-body">0</span>
+          </div>
+          <div class="tech-pill" title="Kepala (+3)">
+            <span class="tech-tag">KEPALA</span>
+            <span class="tech-val" id="chong-stat-head">0</span>
+          </div>
+        </div>
       </div>
 
       <div class="gamjeom-display">
@@ -101,7 +151,7 @@
       </div>
 
       <div class="center-footer-info">
-        <div class="rule-spec">BEST OF 3 ROUNDS • 2 MIN</div>
+        <div class="rule-spec">BEST OF 3 ROUNDS • 2 MIN PER ROUND</div>
         <div class="stream-stat" id="last-stream-time">Terhubung ke Operator</div>
         <div class="heartbeat-indicator" id="heartbeat-text">● Operator Link: Aktif (Ping &lt;1ms)</div>
       </div>
@@ -110,13 +160,46 @@
     <!-- SUDUT MERAH (HONG) -->
     <section class="stadium-corner corner-hong" id="corner-hong-card">
       <div class="corner-header">
-        <div class="corner-label">HONG 紅</div>
+        <div class="corner-label">HONG 紅 (SUDUT MERAH)</div>
         <div class="fighter-name" id="hong-name">Budi Santoso</div>
         <div class="fighter-club" id="hong-club">Rajawali Martial Art</div>
+
+        <!-- Best-of-3 Round Wins Indicator -->
+        <div class="round-wins-bar">
+          <span class="round-wins-label">RONDE MENANG (BEST OF 3):</span>
+          <div class="round-wins-dots" id="hong-round-dots">
+            <span class="round-dot" id="hong-rd-1">R1</span>
+            <span class="round-dot" id="hong-rd-2">R2</span>
+            <span class="round-dot" id="hong-rd-3">R3</span>
+          </div>
+        </div>
       </div>
 
       <div class="score-wrapper">
         <div class="led-score" id="hong-score">0</div>
+      </div>
+
+      <!-- Coach IVR Quota & Technique Breakdown -->
+      <div style="padding: 0 1.25rem;">
+        <div class="ivr-quota-card" id="hong-ivr-card">
+          <span class="ivr-label">📹 COACH IVR QUOTA:</span>
+          <span class="ivr-status ready" id="hong-ivr-status">READY (1)</span>
+        </div>
+
+        <div class="technique-pills-row">
+          <div class="tech-pill" title="Pukulan (+1)">
+            <span class="tech-tag">PUKULAN</span>
+            <span class="tech-val" id="hong-stat-punch">0</span>
+          </div>
+          <div class="tech-pill" title="Badan (+2)">
+            <span class="tech-tag">BADAN</span>
+            <span class="tech-val" id="hong-stat-body">0</span>
+          </div>
+          <div class="tech-pill" title="Kepala (+3)">
+            <span class="tech-tag">KEPALA</span>
+            <span class="tech-val" id="hong-stat-head">0</span>
+          </div>
+        </div>
       </div>
 
       <div class="gamjeom-display">

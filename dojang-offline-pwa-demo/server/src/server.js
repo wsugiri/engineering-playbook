@@ -7,7 +7,7 @@ const authRoutes = require("./routes/auth.routes");
 const tournamentRoutes = require("./routes/tournament.routes");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
@@ -42,8 +42,23 @@ app.use((req, res, next) => {
 app.use(express.static(clientPublicDir));
 
 // 4. Subpath SPA Fallbacks
-app.get(["/turn-pro/display", "/turn-pro/display/"], (req, res) => {
+app.get([
+  "/turn-pro/display", 
+  "/turn-pro/display/", 
+  "/turn-pro/kyorugi-display", 
+  "/turn-pro/kyorugi-display/", 
+  "/turn-pro/battle-display", 
+  "/turn-pro/battle-display/"
+], (req, res) => {
   res.sendFile(path.join(clientPublicDir, "turn-pro", "display.html"));
+});
+
+app.get(["/turn-pro/poomsae-display", "/turn-pro/poomsae-display/"], (req, res) => {
+  res.sendFile(path.join(clientPublicDir, "turn-pro", "poomsae-display.html"));
+});
+
+app.get(["/turn-pro/poomsae", "/turn-pro/poomsae/"], (req, res) => {
+  res.sendFile(path.join(clientPublicDir, "turn-pro", "poomsae.html"));
 });
 
 app.get("/turn-pro/*", (req, res) => {
@@ -66,9 +81,12 @@ app.get("*", (req, res) => {
 app.listen(PORT, () => {
   console.log("==================================================");
   console.log(`🥋 Dojang Multi-Subpath PWA Server running on port ${PORT}`);
-  console.log(`- Core (Root)      : http://localhost:${PORT}/`);
-  console.log(`- Turn Pro (Arena) : http://localhost:${PORT}/turn-pro/`);
-  console.log(`- Coach            : http://localhost:${PORT}/coach/`);
-  console.log(`- Member           : http://localhost:${PORT}/member/`);
+  console.log(`- Core (Root)         : http://localhost:${PORT}/`);
+  console.log(`- Turn Pro (Kyorugi)  : http://localhost:${PORT}/turn-pro/`);
+  console.log(`- Kyorugi Display     : http://localhost:${PORT}/turn-pro/kyorugi-display`);
+  console.log(`- Turn Pro (Poomsae)  : http://localhost:${PORT}/turn-pro/poomsae`);
+  console.log(`- Poomsae Display     : http://localhost:${PORT}/turn-pro/poomsae-display`);
+  console.log(`- Coach               : http://localhost:${PORT}/coach/`);
+  console.log(`- Member              : http://localhost:${PORT}/member/`);
   console.log("==================================================");
 });
